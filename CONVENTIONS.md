@@ -45,6 +45,8 @@ Rules:
 - Use composition when a result needs additional context
 - Separate input types (actions, requests) from output types (results, evaluations) clearly
 
+When a dataclass is used as part of a contract or passed across module boundaries, it should be defined in `types.py` rather than locally.
+
 Project-specific data shapes are defined in each project's documentation. The principle is universal: typed dataclasses, not dictionaries.
 
 ---
@@ -80,25 +82,29 @@ Modules should be stateless where possible. A function takes inputs and returns 
 
 ## 5. The Role of types.py
 
-`types.py` is the single source of truth for shared type definitions. Every module that produces or consumes a shared data shape imports it from `types.py`.
+`types.py` is the single source of truth for data shapes used across multiple modules.
 
 Rules:
 - No module defines its own version of a shared type
-- If a data shape is used by multiple modules, it belongs in `types.py`
-- Single-consumer types that genuinely serve only one module may live in that module, but the bias should be toward shared types. When in doubt, put it in `types.py` — it's easier to extract later than to reconcile divergent definitions
+- A data shape belongs in `types.py` when it is consumed by two or more modules and is likely to be referenced in the future
+- Single-consumer types may live in the module that owns them. However, if a type is passed across a module boundary or used in a contract, it should be promoted to `types.py`
+- When in doubt, prefer putting the type in `types.py` early rather than reconciling divergent definitions later
 - `types.py` conforms to the data shape conventions in Section 2
 
 ---
 
 ## 6. Contracts and Interfaces
 
-We follow a contracts-first development approach: define what a component promises before implementing how it delivers.
+We follow a contracts-first approach: define what a component promises before implementing how it delivers.
 
 Rules:
-- When adding new behaviour that multiple modules will use, define the contract before implementing consumers
-- No module should depend on a concrete implementation when a contract will suffice
-- Contracts can be expressed as documented interfaces, Protocol classes, or abstract base classes — use the lightest mechanism that serves the project's current scale
-- The discipline matters more than the specific Python pattern. For a small codebase, a clearly documented interface in a docstring is sufficient. For a large one, Protocol classes earn their weight
+- When introducing behaviour that will be used by multiple modules, define the contract or interface before writing consumers
+- Modules should depend on contracts rather than concrete implementations whenever practical
+- Contracts may be expressed as:
+  - **Clearly documented interfaces in a docstring** — acceptable for small codebases
+  - **Protocol classes** — preferred for medium-to-large systems
+  - **Abstract base classes** — when inheritance or shared implementation is genuinely needed
+- The goal is loose coupling. Choose the lightest mechanism that achieves this for the current scale of the project
 
 ---
 
@@ -151,7 +157,7 @@ When fixing or reviewing code, we work one directory at a time. This keeps the v
 
 When a change requires modifications on both sides of a directory boundary:
 
-1. Define or update the relevant contract or data shape in `types.py` (or the appropriate contract location) first.
+1. Define or update the relevant contract or data shape in `types.py` (or the appropriate contract location) first — always update the specification before modifying any implementation.
 2. Implement both sides in the same focused pass.
 3. Verify the interface after both sides are updated before moving to other work.
 
