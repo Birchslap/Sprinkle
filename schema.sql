@@ -89,7 +89,9 @@ CREATE TABLE dm_notes (
 -- Indexes
 CREATE INDEX idx_messages_session    ON messages(session_id, created_at);
 CREATE INDEX idx_messages_turn       ON messages(session_id, turn_id);
+ALTER TABLE characters ADD CONSTRAINT uq_characters_campaign_name UNIQUE (campaign_id, name);
 CREATE INDEX idx_characters_campaign ON characters(campaign_id, status);
+ALTER TABLE locations ADD CONSTRAINT uq_locations_campaign_name UNIQUE (campaign_id, name);
 CREATE INDEX idx_locations_campaign  ON locations(campaign_id, status);
 CREATE INDEX idx_events_campaign     ON events(campaign_id, created_at);
 CREATE INDEX idx_dm_notes_campaign   ON dm_notes(campaign_id, category, status);
