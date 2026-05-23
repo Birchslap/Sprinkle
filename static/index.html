@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sprinkle</title>
+
+    <!-- Fonts: EB Garamond for narrative, Inter for UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- CAMPAIGN LAUNCHER OVERLAY -->
+    <div id="launcher">
+        <div class="launcher-panel">
+            <h2>Sprinkle</h2>
+
+            <h3>Continue a Campaign</h3>
+            <ul class="campaign-list" id="campaign-list">
+                <!-- Populated by JS on load -->
+            </ul>
+
+            <hr class="launcher-divider">
+
+            <h3>New Campaign</h3>
+            <input type="text" class="launcher-input" id="new-campaign-name" placeholder="Campaign name...">
+            <input type="text" class="launcher-input" id="new-campaign-setting" placeholder="Setting (optional)...">
+            <button class="launcher-btn" id="new-campaign-btn">Begin</button>
+        </div>
+    </div>
+
+    <!-- ATMOSPHERIC MARGIN -->
+    <div id="atmos-margin">
+        <div id="atmos-brand">SPRINKLE</div>
+    </div>
+
+    <!-- LEFT PANEL: Chat -->
+    <div id="left-panel">
+        <!-- Top bar -->
+        <div id="top-bar">
+            <div id="top-bar-controls">
+                <!-- Font size -->
+                <div class="control-group">
+                    <span class="control-label">Size</span>
+                    <select class="control-select" id="font-size-select">
+                        <option value="15">Small</option>
+                        <option value="17">Medium</option>
+                        <option value="19" selected>Large</option>
+                    </select>
+                </div>
+
+                <!-- High contrast toggle -->
+                <div class="control-group">
+                    <span class="control-label">High Contrast</span>
+                    <div class="control-toggle" id="contrast-toggle"></div>
+                </div>
+
+                <!-- Campaign name display -->
+                <div class="control-group">
+                    <span class="control-label" id="campaign-display"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat tabs -->
+        <div id="chat-tabs">
+            <div class="chat-tab active" data-tab="ic">In Character</div>
+            <div class="chat-tab" data-tab="ooc">Out of Character</div>
+        </div>
+
+        <!-- Content area -->
+        <div id="content-area">
+            <div id="main-view">
+                <div id="chat-window">
+                    <!-- Messages populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Input -->
+        <div id="input-area">
+            <input type="text" id="player-input" placeholder="What do you do?" autocomplete="off" disabled>
+            <button id="send-btn" disabled>Send</button>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: Game State -->
+    <div id="right-panel">
+        <div id="state-tabs">
+            <div class="state-tab active" data-page="map">Map</div>
+            <div class="state-tab" data-page="character">Character</div>
+            <div class="state-tab" data-page="party">Party</div>
+            <div class="state-tab" data-page="inventory">Inventory</div>
+            <div class="state-tab" data-page="notes">Notes</div>
+        </div>
+        <div id="state-content">
+            <div class="state-page active" id="page-map">
+                <div class="map-controls">
+                    <button class="map-btn" id="swap-views" title="Swap map and chat">⇄ Expand</button>
+                    <button class="map-btn" id="popout-map" title="Open in new window">⧉ Popout</button>
+                </div>
+                <div id="map-container">
+                    <canvas id="map-canvas"></canvas>
+                    <span id="map-placeholder">Map will render here</span>
+                </div>
+            </div>
+            <div class="state-page" id="page-character">
+                <p class="placeholder-text">Character sheet will display here.</p>
+            </div>
+            <div class="state-page" id="page-party">
+                <p class="placeholder-text">Party information will display here.</p>
+            </div>
+            <div class="state-page" id="page-inventory">
+                <p class="placeholder-text">Gold and equipment will display here.</p>
+            </div>
+            <div class="state-page" id="page-notes">
+                <div id="notes-list"></div>
+                <div id="note-input-area">
+                    <input type="text" id="note-input" placeholder="Add a note..." autocomplete="off">
+                    <button id="note-add-btn">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="sprinkle.js"></script>
+</body>
+</html>
