@@ -1,34 +1,16 @@
 """
 Module: provider.py
-Dependencies: config.py
+Dependencies: config.py, types.py
 
 Handles all communication with the xAI API including streaming
 and tool call processing.
 """
 
 import json
-from dataclasses import dataclass
 from openai import AsyncOpenAI
 
 from config import ModelConfig
-
-
-# ============================================================
-# Event Types
-# ============================================================
-
-@dataclass
-class ContentDelta:
-    """A chunk of streamed content text."""
-    text: str
-
-
-@dataclass
-class ToolCallRequest:
-    """A complete tool call request from the model."""
-    id: str
-    name: str
-    arguments: dict
+from types import ContentDelta, ToolCallRequest
 
 
 # ============================================================
