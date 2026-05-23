@@ -1,0 +1,435 @@
+/**
+ * sprinkle.js
+ *
+ * Client for the Sprinkle DM engine.
+ * Handles: campaign launcher, WebSocket protocol, typewriter buffer,
+ * dialogue detection, tab switching, text size, high contrast.
+ */
+
+// ============================================================
+// Config
+// ============================================================
+
+const TYPEWRITER = {
+    bufferMs: 500,          // Initial buffer before text starts appearing
+    charMs: 30,             // Milliseconds per character during drip
+    cursorLingerMs: 600,    // How long the cursor stays after text finishes
+};
+
+// ============================================================
+// State
+// ============================================================
+
+let ws = null;
+let campaignId = null;
+let isNewCampaign = false;
+let highContrast = false;
+
+// Typewriter state
+let typewriterQueue = "";
+let typewriterActive = false;
+let typewriterTimer = null;
+let bufferTimer = null;
+let currentDmBlock = null;
+let turnInProgress = false;
+
+// ============================================================
+// DOM References
+// ============================================================
+
+const launcher = document.getElementById("launcher");
+const campaignList = document.getElementById("campaign-list");
+const newCampaignName = document.getElementById("new-campaign-name");
+const newCampaignSetting = document.getElementById("new-campaign-setting");
+const newCampaignBtn = document.getElementById("new-campaign-btn");
+const campaignDisplay = document.getElementById("campaign-display");
+
+const chatWindow = document.getElementById("chat-window");
+const playerInput = document.getElementById("player-input");
+const sendBtn = document.getElementById("send-btn");
+
+const fontSizeSelect = document.getElementById("font-size-select");
+const contrastToggle = document.getElementById("contrast-toggle");
+
+const chatTabs = document.querySelectorAll(".chat-tab");
+const stateTabs = document.querySelectorAll(".state-tab");
+
+// ============================================================
+// Campaign Launcher
+// ============================================================
+
+async function loadCampaigns() {
+    try {
+        const res = await fetch("/api/campaigns");
+        const campaigns = await res.json();
+        campaignList.innerHTML = "";
+
+        if (campaigns.length === 0) {
+            campaignList.innerHTML = '<li class="campaign-empty">No campaigns yet.</li>';
+            return;
+        }
+
+        campaigns.forEach(c => {
+            const li = document.createElement("li");
+            li.className = "campaign-item";
+            li.textContent = c.name;
+            if (c.setting) {
+                const span = document.createElement("span");
+                span.className = "campaign-setting";
+                span.textContent = ` — ${c.setting}`;
+                li.appendChild(span);
+            }
+            li.addEventListener("click", () => resumeCampaign(c.id, c.name));
+            campaignList.appendChild(li);
+        });
+    } catch (err) {
+        campaignList.innerHTML = '<li class="campaign-empty">Failed to load campaigns.</li>';
+    }
+}
+
+async function createCampaign() {
+    const name = newCampaignName.value.trim();
+    if (!name) {
+        newCampaignName.focus();
+        return;
+    }
+
+    try {
+        const res = await fetch("/api/campaigns", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                name: name,
+                setting: newCampaignSetting.value.trim() || null,
+            }),
+        });
+        const campaign = await res.json();
+        isNewCampaign = true;
+        startGame(campaign.id, campaign.name);
+    } catch (err) {
+        console.error("Failed to create campaign:", err);
+    }
+}
+
+function resumeCampaign(id, name) {
+    isNewCampaign = false;
+    startGame(id, name);
+}
+
+newCampaignBtn.addEventListener("click", createCampaign);
+newCampaignName.addEventListener("keydown", e => {
+    if (e.key === "Enter") createCampaign();
+});
+
+// ============================================================
+// Game Connection
+// ============================================================
+
+function startGame(id, name) {
+    campaignId = id;
+    campaignDisplay.textContent = name;
+    launcher.classList.add("hidden");
+    chatWindow.innerHTML = "";
+    connectWebSocket();
+}
+
+function connectWebSocket() {
+    const protocol = location.protocol === "https:" ? "wss:" : "ws:";
+    ws = new WebSocket(`${protocol}//${location.host}/ws/${campaignId}`);
+
+    ws.onopen = () => {
+        enableInput();
+        ws.send(JSON.stringify({
+            type: isNewCampaign ? "start" : "resume",
+        }));
+    };
+
+    ws.onmessage = (event) => {
+        const msg = JSON.parse(event.data);
+        handleServerMessage(msg);
+    };
+
+    ws.onclose = () => {
+        disableInput();
+        appendSystem("Connection lost. Refresh to reconnect.");
+    };
+
+    ws.onerror = () => {
+        disableInput();
+    };
+}
+
+// ============================================================
+// Message Handling
+// ============================================================
+
+function handleServerMessage(msg) {
+    switch (msg.type) {
+        case "delta":
+            handleDelta(msg.text);
+            break;
+        case "turn_end":
+            handleTurnEnd();
+            break;
+        case "error":
+            appendSystem(`Error: ${msg.message}`);
+            enableInput();
+            break;
+    }
+}
+
+function handleDelta(text) {
+    if (!turnInProgress) {
+        turnInProgress = true;
+        currentDmBlock = createMessageBlock("dm");
+        disableInput();
+    }
+    typewriterQueue += text;
+    startTypewriter();
+}
+
+function handleTurnEnd() {
+    // Flush remaining queue immediately at normal typewriter speed.
+    // The typewriter will finish naturally — we just stop accepting new deltas.
+    turnInProgress = false;
+
+    // If nothing was ever queued (pure tool-call turn), clean up.
+    if (!typewriterQueue && !typewriterActive) {
+        enableInput();
+    }
+}
+
+// ============================================================
+// Typewriter
+// ============================================================
+
+function startTypewriter() {
+    if (typewriterActive) return; // Already dripping.
+
+    if (!bufferTimer) {
+        // Start the initial buffer period.
+        bufferTimer = setTimeout(() => {
+            bufferTimer = null;
+            typewriterActive = true;
+            dripNext();
+        }, TYPEWRITER.bufferMs);
+    }
+}
+
+function dripNext() {
+    if (typewriterQueue.length === 0) {
+        // Queue empty.
+        typewriterActive = false;
+
+        if (!turnInProgress) {
+            // Turn is over and queue is drained — finalise.
+            setTimeout(() => finaliseDmBlock(), TYPEWRITER.cursorLingerMs);
+        }
+        // If turn still in progress, we'll resume when the next delta arrives.
+        return;
+    }
+
+    const char = typewriterQueue[0];
+    typewriterQueue = typewriterQueue.slice(1);
+    appendCharToBlock(char);
+
+    typewriterTimer = setTimeout(dripNext, TYPEWRITER.charMs);
+}
+
+function finaliseDmBlock() {
+    if (!currentDmBlock) return;
+
+    // Process the completed text for dialogue highlighting.
+    const raw = currentDmBlock.innerHTML;
+    currentDmBlock.innerHTML = highlightDialogue(raw);
+    currentDmBlock.classList.remove("typing");
+    currentDmBlock = null;
+    scrollToBottom();
+    enableInput();
+}
+
+function appendCharToBlock(char) {
+    if (!currentDmBlock) return;
+
+    if (char === "\n") {
+        currentDmBlock.appendChild(document.createElement("br"));
+    } else {
+        currentDmBlock.appendChild(document.createTextNode(char));
+    }
+    scrollToBottom();
+}
+
+// ============================================================
+// Dialogue Detection
+// ============================================================
+
+function highlightDialogue(html) {
+    // Find quoted speech and wrap in dialogue spans.
+    // Handles "straight quotes" and \u201C\u201D curly quotes.
+    return html.replace(
+        /(["\u201C])([^"\u201D]*?)(["\u201D])/g,
+        '<span class="dialogue">\u201C$2\u201D</span>'
+    );
+}
+
+// ============================================================
+// Message Blocks
+// ============================================================
+
+function createMessageBlock(role) {
+    const div = document.createElement("div");
+    div.className = `message ${role}`;
+    if (role === "dm") {
+        div.classList.add("typing"); // Shows cursor during typewriter.
+    }
+    chatWindow.appendChild(div);
+    scrollToBottom();
+    return div;
+}
+
+function appendPlayerMessage(text) {
+    const div = createMessageBlock("player");
+    div.textContent = text;
+    return div;
+}
+
+function appendSystem(text) {
+    const div = document.createElement("div");
+    div.className = "message system";
+    div.textContent = text;
+    chatWindow.appendChild(div);
+    scrollToBottom();
+}
+
+// ============================================================
+// Mechanical Results (dice rolls, checks)
+// ============================================================
+
+function appendMechanical(data) {
+    // Future: parse tool results from the server and display
+    // styled mechanical blocks (rolls, damage, checks).
+    const div = document.createElement("div");
+    div.className = "mechanical-block";
+    div.textContent = data;
+    chatWindow.appendChild(div);
+    scrollToBottom();
+}
+
+// ============================================================
+// Player Input
+// ============================================================
+
+function sendMessage() {
+    const text = playerInput.value.trim();
+    if (!text || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+    appendPlayerMessage(text);
+    ws.send(JSON.stringify({ type: "message", content: text }));
+    playerInput.value = "";
+    disableInput();
+}
+
+function enableInput() {
+    playerInput.disabled = false;
+    sendBtn.disabled = false;
+    playerInput.focus();
+}
+
+function disableInput() {
+    playerInput.disabled = true;
+    sendBtn.disabled = true;
+}
+
+sendBtn.addEventListener("click", sendMessage);
+playerInput.addEventListener("keydown", e => {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+// ============================================================
+// Tabs
+// ============================================================
+
+chatTabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+        chatTabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        // Future: switch between IC and OOC message streams.
+    });
+});
+
+stateTabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+        stateTabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        const page = tab.dataset.page;
+        document.querySelectorAll(".state-page").forEach(p => p.classList.remove("active"));
+        document.getElementById(`page-${page}`).classList.add("active");
+    });
+});
+
+// ============================================================
+// Text Size
+// ============================================================
+
+fontSizeSelect.addEventListener("change", () => {
+    const size = fontSizeSelect.value + "px";
+    chatWindow.style.fontSize = size;
+});
+
+// Apply default on load.
+chatWindow.style.fontSize = fontSizeSelect.value + "px";
+
+// ============================================================
+// High Contrast
+// ============================================================
+
+contrastToggle.addEventListener("click", () => {
+    highContrast = !highContrast;
+    contrastToggle.classList.toggle("active", highContrast);
+    document.body.classList.toggle("high-contrast", highContrast);
+});
+
+// ============================================================
+// Notes (local player notes)
+// ============================================================
+
+const noteInput = document.getElementById("note-input");
+const noteAddBtn = document.getElementById("note-add-btn");
+const notesList = document.getElementById("notes-list");
+
+function addNote() {
+    const text = noteInput.value.trim();
+    if (!text) return;
+
+    const div = document.createElement("div");
+    div.className = "note-entry";
+    div.textContent = text;
+
+    // Click to remove.
+    div.addEventListener("click", () => div.remove());
+    notesList.appendChild(div);
+    noteInput.value = "";
+}
+
+noteAddBtn.addEventListener("click", addNote);
+noteInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") addNote();
+});
+
+// ============================================================
+// Utilities
+// ============================================================
+
+function scrollToBottom() {
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+// ============================================================
+// Init
+// ============================================================
+
+loadCampaigns();
