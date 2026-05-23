@@ -6,6 +6,7 @@ Shared data shapes used across multiple modules.
 """
 
 from dataclasses import dataclass, field
+from typing import Any
 
 
 @dataclass(frozen=True)
@@ -19,4 +20,4 @@ class ToolCallRequest:
     """A complete tool call parsed from the model's response."""
     id: str
     name: str
-    arguments: dict = field(default_factory=dict)
+    arguments: dict[str, Any] = field(default_factory=dict)
