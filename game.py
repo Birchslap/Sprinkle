@@ -26,7 +26,7 @@ from types import ContentDelta, ToolCallRequest
 
 # -- Constants ----------------------------------------------------------------
 
-MAX_TOOL_ROUNDS = 10
+MAX_TOOL_ROUNDS = 15
 HISTORY_LIMIT = 50
 
 
