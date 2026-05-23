@@ -29,7 +29,12 @@ def create_client(config: ModelConfig) -> AsyncOpenAI:
 # Streaming
 # ============================================================
 
-async def stream_response(client, messages, tools, config):
+async def stream_response(
+    client: AsyncOpenAI,
+    messages: list[dict],
+    tools: list[dict] | None,
+    config: ModelConfig,
+):
     """
     Stream a chat completion, yielding events as they arrive.
 
@@ -51,7 +56,7 @@ async def stream_response(client, messages, tools, config):
     )
 
     # Tool call deltas arrive in pieces — accumulate by index
-    tool_calls_acc = {}
+    accumulated_tool_calls = {}
 
     async for chunk in stream:
         if not chunk.choices:
@@ -66,22 +71,22 @@ async def stream_response(client, messages, tools, config):
         if delta.tool_calls:
             for tc_delta in delta.tool_calls:
                 idx = tc_delta.index
-                if idx not in tool_calls_acc:
-                    tool_calls_acc[idx] = {
+                if idx not in accumulated_tool_calls:
+                    accumulated_tool_calls[idx] = {
                         "id": "",
                         "name": "",
                         "arguments": "",
                     }
                 if tc_delta.id:
-                    tool_calls_acc[idx]["id"] = tc_delta.id
+                    accumulated_tool_calls[idx]["id"] = tc_delta.id
                 if tc_delta.function and tc_delta.function.name:
-                    tool_calls_acc[idx]["name"] = tc_delta.function.name
+                    accumulated_tool_calls[idx]["name"] = tc_delta.function.name
                 if tc_delta.function and tc_delta.function.arguments:
-                    tool_calls_acc[idx]["arguments"] += tc_delta.function.arguments
+                    accumulated_tool_calls[idx]["arguments"] += tc_delta.function.arguments
 
     # Yield completed tool calls after stream is exhausted
-    for idx in sorted(tool_calls_acc.keys()):
-        tc = tool_calls_acc[idx]
+    for idx in sorted(accumulated_tool_calls.keys()):
+        tc = accumulated_tool_calls[idx]
         try:
             args = json.loads(tc["arguments"])
         except json.JSONDecodeError:
