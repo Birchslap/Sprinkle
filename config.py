@@ -31,7 +31,8 @@ class AppConfig:
     host: str = "127.0.0.1"
     port: int = 8000
     history_limit: int = 100
-    model_history_limit: int = 50
+    message_window_max: int = 150
+    message_window_chop: int = 50
 
 
 def load_config() -> AppConfig:
@@ -49,5 +50,6 @@ def load_config() -> AppConfig:
         host=os.environ.get("SPRINKLE_HOST", "127.0.0.1"),
         port=int(os.environ.get("SPRINKLE_PORT", "8000")),
         history_limit=max(1, int(os.environ.get("SPRINKLE_HISTORY_LIMIT", "100"))),
-        model_history_limit=max(1, int(os.environ.get("SPRINKLE_MODEL_HISTORY_LIMIT", "50"))),
+        message_window_max=max(1, int(os.environ.get("SPRINKLE_MESSAGE_WINDOW_MAX", "150"))),
+        message_window_chop=max(1, int(os.environ.get("SPRINKLE_MESSAGE_WINDOW_CHOP", "50"))),
     )
