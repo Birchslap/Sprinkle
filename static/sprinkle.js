@@ -41,6 +41,7 @@ const launcher = document.getElementById("launcher");
 const campaignList = document.getElementById("campaign-list");
 const newCampaignName = document.getElementById("new-campaign-name");
 const newCampaignSetting = document.getElementById("new-campaign-setting");
+const newCampaignCharacter = document.getElementById("new-campaign-character");
 const newCampaignBtn = document.getElementById("new-campaign-btn");
 const campaignDisplay = document.getElementById("campaign-display");
 
@@ -72,14 +73,29 @@ async function loadCampaigns() {
         campaigns.forEach(c => {
             const li = document.createElement("li");
             li.className = "campaign-item";
-            li.textContent = c.name;
+
+            const info = document.createElement("div");
+            info.className = "campaign-item-info";
+            info.textContent = c.name;
             if (c.setting) {
                 const span = document.createElement("span");
                 span.className = "campaign-setting";
                 span.textContent = ` — ${c.setting}`;
-                li.appendChild(span);
+                info.appendChild(span);
             }
-            li.addEventListener("click", () => resumeCampaign(c.id, c.name));
+            info.addEventListener("click", () => resumeCampaign(c.id, c.name));
+            li.appendChild(info);
+
+            const del = document.createElement("button");
+            del.className = "campaign-delete";
+            del.textContent = "✕";
+            del.title = "Delete campaign";
+            del.addEventListener("click", (e) => {
+                e.stopPropagation();
+                deleteCampaign(c.id, c.name);
+            });
+            li.appendChild(del);
+
             campaignList.appendChild(li);
         });
     } catch (err) {
@@ -95,12 +111,14 @@ async function createCampaign() {
     }
 
     try {
+        const charDoc = newCampaignCharacter.value.trim() || null;
         const res = await fetch("/api/campaigns", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 name: name,
                 setting: newCampaignSetting.value.trim() || null,
+                character_doc: charDoc,
             }),
         });
         const campaign = await res.json();
@@ -114,6 +132,21 @@ async function createCampaign() {
 function resumeCampaign(id, name) {
     isNewCampaign = false;
     startGame(id, name);
+}
+
+async function deleteCampaign(id, name) {
+    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+
+    try {
+        const res = await fetch(`/api/campaigns/${id}`, { method: "DELETE" });
+        if (res.ok) {
+            loadCampaigns(); // Refresh the list.
+        } else {
+            console.error("Failed to delete campaign.");
+        }
+    } catch (err) {
+        console.error("Failed to delete campaign:", err);
+    }
 }
 
 newCampaignBtn.addEventListener("click", createCampaign);
@@ -165,6 +198,13 @@ function connectWebSocket() {
 
 function handleServerMessage(msg) {
     switch (msg.type) {
+        case "history":
+            renderHistoryMessage(msg.role, msg.content);
+            break;
+        case "history_end":
+            scrollToBottom();
+            enableInput();
+            break;
         case "delta":
             handleDelta(msg.text);
             break;
@@ -175,6 +215,17 @@ function handleServerMessage(msg) {
             appendSystem(`Error: ${msg.message}`);
             enableInput();
             break;
+    }
+}
+
+function renderHistoryMessage(role, content) {
+    if (role === "user") {
+        appendPlayerMessage(content);
+    } else if (role === "assistant") {
+        const div = createMessageBlock("dm");
+        div.textContent = content;
+        div.innerHTML = highlightDialogue(div.innerHTML);
+        div.classList.remove("typing");
     }
 }
 
