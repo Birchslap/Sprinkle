@@ -4,18 +4,19 @@
 
 -- Campaigns
 CREATE TABLE campaigns (
-    id          SERIAL PRIMARY KEY,
-    name        TEXT NOT NULL,
-    setting     TEXT,
-    status      TEXT NOT NULL DEFAULT 'active',
-    created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
-    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+    id              SERIAL PRIMARY KEY,
+    name            TEXT NOT NULL,
+    setting         TEXT,
+    character_doc   TEXT,
+    status          TEXT NOT NULL DEFAULT 'active',
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 -- Sessions within a campaign
 CREATE TABLE sessions (
     id          SERIAL PRIMARY KEY,
-    campaign_id INTEGER NOT NULL REFERENCES campaigns(id),
+    campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
     started_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     ended_at    TIMESTAMPTZ,
     summary     TEXT
@@ -24,7 +25,7 @@ CREATE TABLE sessions (
 -- Complete message transcript
 CREATE TABLE messages (
     id          SERIAL PRIMARY KEY,
-    session_id  INTEGER NOT NULL REFERENCES sessions(id),
+    session_id  INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     turn_id     INTEGER NOT NULL,
     role        TEXT NOT NULL,
     content     TEXT NOT NULL,
@@ -36,7 +37,7 @@ CREATE TABLE messages (
 -- Characters (PCs and NPCs)
 CREATE TABLE characters (
     id              SERIAL PRIMARY KEY,
-    campaign_id     INTEGER NOT NULL REFERENCES campaigns(id),
+    campaign_id     INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
     name            TEXT NOT NULL,
     character_type  TEXT NOT NULL,
     description     TEXT,
@@ -50,7 +51,7 @@ CREATE TABLE characters (
 -- Locations
 CREATE TABLE locations (
     id          SERIAL PRIMARY KEY,
-    campaign_id INTEGER NOT NULL REFERENCES campaigns(id),
+    campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
     name        TEXT NOT NULL,
     description TEXT,
     notes       TEXT,
@@ -62,8 +63,8 @@ CREATE TABLE locations (
 -- Events (things that happened in the narrative)
 CREATE TABLE events (
     id           SERIAL PRIMARY KEY,
-    campaign_id  INTEGER NOT NULL REFERENCES campaigns(id),
-    session_id   INTEGER REFERENCES sessions(id),
+    campaign_id  INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+    session_id   INTEGER REFERENCES sessions(id) ON DELETE CASCADE,
     turn_id      INTEGER,
     summary      TEXT NOT NULL,
     details      TEXT,
@@ -74,8 +75,8 @@ CREATE TABLE events (
 -- DM Notes (the director's notebook)
 CREATE TABLE dm_notes (
     id          SERIAL PRIMARY KEY,
-    campaign_id INTEGER NOT NULL REFERENCES campaigns(id),
-    session_id  INTEGER REFERENCES sessions(id),
+    campaign_id INTEGER NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+    session_id  INTEGER REFERENCES sessions(id) ON DELETE CASCADE,
     turn_id     INTEGER,
     category    TEXT NOT NULL,
     title       TEXT NOT NULL,
