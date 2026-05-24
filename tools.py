@@ -28,6 +28,7 @@ from db import (
     save_location,
     update_dm_note,
 )
+from db import update_character_status
 
 log = logging.getLogger(__name__)
 
@@ -157,6 +158,32 @@ TOOL_DEFINITIONS = [
                     }
                 },
                 "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "update_character_status",
+            "description": (
+                "Update a character's status. Use this when a character "
+                "dies, goes missing, retires, or otherwise changes "
+                "their availability in the narrative."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "description": "Character name.",
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": ["active", "dead", "missing", "retired", "inactive"],
+                        "description": "New status for the character.",
+                    },
+                },
+                "required": ["name", "status"],
             },
         },
     },
@@ -441,6 +468,16 @@ async def _handle_list_characters(
     return {"characters": rows}
 
 
+async def _handle_update_character_status(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
+    await update_character_status(
+        pool, campaign_id, name=args["name"], status=args["status"],
+    )
+    return {"updated": args["name"], "status": args["status"]}
+
+
 async def _handle_save_location(
     pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
     args: dict[str, Any],
@@ -551,6 +588,7 @@ _HANDLERS = {
     "save_character": _handle_save_character,
     "get_character": _handle_get_character,
     "list_characters": _handle_list_characters,
+    "update_character_status": _handle_update_character_status,
     "save_location": _handle_save_location,
     "get_location": _handle_get_location,
     "list_locations": _handle_list_locations,
