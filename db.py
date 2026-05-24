@@ -405,3 +405,51 @@ async def update_dm_note(pool: asyncpg.Pool, note_id: int, content: str | None =
 
     row = await pool.fetchrow(query, *values)
     return dict(row) if row else None
+
+
+# -- Token Usage --------------------------------------------------------------
+
+async def save_token_usage(
+    pool: asyncpg.Pool,
+    session_id: int,
+    turn_id: int,
+    prompt_tokens: int,
+    completion_tokens: int,
+    cached_tokens: int,
+    total_tokens: int,
+) -> dict:
+    """Record token usage from a single API call."""
+    row = await pool.fetchrow(
+        """INSERT INTO token_usage
+               (session_id, turn_id, prompt_tokens, completion_tokens,
+                cached_tokens, total_tokens)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           RETURNING *""",
+        session_id, turn_id, prompt_tokens, completion_tokens,
+        cached_tokens, total_tokens
+    )
+    return dict(row)
+
+
+async def get_campaign_usage(
+    pool: asyncpg.Pool,
+    campaign_id: int,
+) -> dict:
+    """Aggregate token usage across all sessions for a campaign.
+
+    Returns totals for prompt, completion, cached, and total tokens,
+    plus the number of API calls made.
+    """
+    row = await pool.fetchrow(
+        """SELECT
+               COALESCE(SUM(t.prompt_tokens), 0)     AS prompt_tokens,
+               COALESCE(SUM(t.completion_tokens), 0)  AS completion_tokens,
+               COALESCE(SUM(t.cached_tokens), 0)      AS cached_tokens,
+               COALESCE(SUM(t.total_tokens), 0)        AS total_tokens,
+               COUNT(*)                                AS api_calls
+           FROM token_usage t
+           JOIN sessions s ON t.session_id = s.id
+           WHERE s.campaign_id = $1""",
+        campaign_id
+    )
+    return dict(row)
