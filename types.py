@@ -21,3 +21,12 @@ class ToolCallRequest:
     id: str
     name: str
     arguments: dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class UsageData:
+    """Token usage from a single API call."""
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    cached_tokens: int = 0
+    total_tokens: int = 0
