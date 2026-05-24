@@ -569,6 +569,57 @@ body {
     color: #555;
 }
 
+.launcher-textarea {
+    width: 100%;
+    background: #1a1a2e;
+    border: 1px solid #2a2a4a;
+    color: #d4d4d4;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    border-radius: 4px;
+    outline: none;
+    margin-bottom: 10px;
+    transition: border-color 0.2s ease;
+    resize: vertical;
+    min-height: 80px;
+    max-height: 240px;
+    line-height: 1.5;
+}
+
+.launcher-textarea:focus {
+    border-color: #b48ead;
+}
+
+.launcher-textarea::placeholder {
+    color: #555;
+}
+
+.campaign-delete {
+    background: none;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    padding: 4px 8px;
+    margin-left: auto;
+    transition: color 0.2s ease;
+}
+
+.campaign-delete:hover {
+    color: #bf616a;
+}
+
+.campaign-item {
+    display: flex;
+    align-items: center;
+}
+
+.campaign-item-info {
+    flex: 1;
+}
+
 .launcher-btn {
     width: 100%;
     padding: 12px;
