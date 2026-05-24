@@ -7,9 +7,12 @@ dispatches tool calls, and persists every message to the transcript.
 """
 
 import json
+import logging
 from typing import AsyncGenerator
 
 import asyncpg
+
+log = logging.getLogger(__name__)
 
 from config import AppConfig
 from db import (
@@ -104,10 +107,55 @@ async def _build_messages(state: GameState) -> list[dict[str, str]]:
     return messages
 
 
+# -- Tool Dispatch ------------------------------------------------------------
+
+async def _handle_tool_rounds(
+    state: GameState,
+    turn_id: int,
+    tool_calls: list[ToolCallRequest],
+    content: str,
+) -> None:
+    """Dispatch tool calls, persist everything, and log failures.
+
+    Saves the assistant's tool-call message, then dispatches each call
+    and saves the result. Errors are logged with full tracebacks but
+    don't crash the turn — the model receives the error as a tool result
+    and can recover.
+    """
+    # Save the assistant message that contained the tool calls
+    assistant_msg = build_assistant_tool_call_message(tool_calls)
+    await save_message(
+        state.pool, state.session_id, turn_id,
+        role="assistant", content=content or "",
+        tool_data=assistant_msg,
+    )
+
+    # Dispatch each tool call and save results
+    for tc in tool_calls:
+        try:
+            result = await dispatch_tool(
+                tc.name, state.pool,
+                state.campaign_id, state.session_id, turn_id,
+                tc.arguments,
+            )
+        except Exception:
+            log.exception("Tool dispatch failed: %s (call_id=%s)", tc.name, tc.id)
+            result = json.dumps({"error": f"Tool '{tc.name}' failed unexpectedly."})
+
+        await save_message(
+            state.pool, state.session_id, turn_id,
+            role="tool", content=result,
+            tool_name=tc.name,
+            tool_data={"tool_call_id": tc.id},
+        )
+
+
 # -- Core Loop ----------------------------------------------------------------
 
-async def process_turn(state: GameState,
-                       player_input: str) -> AsyncGenerator[ContentDelta, None]:
+async def process_turn(
+    state: GameState,
+    player_input: str,
+) -> AsyncGenerator[ContentDelta, None]:
     """Process one player turn through the full model cycle.
 
     Yields ContentDelta objects as the model streams its response.
@@ -118,7 +166,7 @@ async def process_turn(state: GameState,
     1. Save player message
     2. Build message history
     3. Stream model response
-    4. If tool calls: dispatch, persist, re-prompt (repeat)
+    4. If tool calls: dispatch via _handle_tool_rounds, re-prompt
     5. If pure content: persist and finish
     """
     state.turn_id += 1
@@ -134,8 +182,8 @@ async def process_turn(state: GameState,
         messages = await _build_messages(state)
 
         # Stream and collect
-        content_parts = []
-        tool_calls = []
+        content_parts: list[str] = []
+        tool_calls: list[ToolCallRequest] = []
 
         async for event in stream_response(
             state.client, messages, TOOL_DEFINITIONS, state.config.model
@@ -149,39 +197,19 @@ async def process_turn(state: GameState,
         full_content = "".join(content_parts)
 
         if not tool_calls:
-            # Pure content response — save and we're done
+            # Pure content — save and finish
             await save_message(
                 state.pool, state.session_id, turn_id,
                 role="assistant", content=full_content,
             )
             return
 
-        # Tool calls — save the assistant's tool call message
-        assistant_msg = build_assistant_tool_call_message(tool_calls)
-        await save_message(
-            state.pool, state.session_id, turn_id,
-            role="assistant", content=full_content or "",
-            tool_data=assistant_msg,
-        )
-
-        # Dispatch each tool call and save results
-        for tc in tool_calls:
-            result = await dispatch_tool(
-                tc.name, state.pool,
-                state.campaign_id, state.session_id, turn_id,
-                tc.arguments,
-            )
-            await save_message(
-                state.pool, state.session_id, turn_id,
-                role="tool", content=result,
-                tool_name=tc.name,
-                tool_data={"tool_call_id": tc.id},
-            )
-
-        # Loop back — the model will see its tool calls and results
-        # in the history and generate a follow-up response
+        # Tool calls — dispatch, persist, then loop for the follow-up
+        await _handle_tool_rounds(state, turn_id, tool_calls, full_content)
 
     # Safety valve — shouldn't reach here in normal play
-    yield ContentDelta(
-        text="\n\n*[The DM pauses, lost in thought...]*"
+    log.warning(
+        "Hit MAX_TOOL_ROUNDS (%d) for campaign=%s turn=%d",
+        MAX_TOOL_ROUNDS, state.campaign_id, turn_id,
     )
+    yield ContentDelta(text="\n\n*[The DM pauses, lost in thought...]*")
