@@ -62,7 +62,8 @@ const stateTabs = document.querySelectorAll(".state-tab");
 async function loadCampaigns() {
     try {
         const res = await fetch("/api/campaigns");
-        const campaigns = await res.json();
+        const data = await res.json();
+        const campaigns = data.campaigns || [];
         campaignList.innerHTML = "";
 
         if (campaigns.length === 0) {
@@ -121,9 +122,9 @@ async function createCampaign() {
                 character_doc: charDoc,
             }),
         });
-        const campaign = await res.json();
+        const data = await res.json();
         isNewCampaign = true;
-        startGame(campaign.id, campaign.name);
+        startGame(data.campaign.id, data.campaign.name);
     } catch (err) {
         console.error("Failed to create campaign:", err);
     }
@@ -168,7 +169,7 @@ function startGame(id, name) {
 
 function connectWebSocket() {
     const protocol = location.protocol === "https:" ? "wss:" : "ws:";
-    ws = new WebSocket(`${protocol}//${location.host}/ws/${campaignId}`);
+    ws = new WebSocket(`${protocol}//${location.host}/ws/game/${campaignId}`);
 
     ws.onopen = () => {
         enableInput();
