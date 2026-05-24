@@ -125,12 +125,7 @@ async def _game_socket(ws: WebSocket, campaign_id: int):
         )
 
         if init.get("type") == "start":
-            await state.start_campaign(
-                campaign["name"],
-                system_prompt,
-                campaign.get("setting"),
-                campaign.get("character_doc"),
-            )
+            await state.start_campaign(campaign_id, system_prompt)
         else:
             await state.resume_campaign(campaign_id, system_prompt)
 
