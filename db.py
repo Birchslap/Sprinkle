@@ -41,6 +41,14 @@ async def get_campaign(pool: asyncpg.Pool, campaign_id: int) -> dict | None:
     return dict(row) if row else None
 
 
+async def list_campaigns(pool: asyncpg.Pool) -> list[dict]:
+    """All campaigns, newest first."""
+    rows = await pool.fetch(
+        "SELECT * FROM campaigns ORDER BY updated_at DESC"
+    )
+    return [dict(r) for r in rows]
+
+
 async def update_campaign_status(pool: asyncpg.Pool, campaign_id: int, status: str) -> None:
     await pool.execute(
         """UPDATE campaigns SET status = $1, updated_at = now()
@@ -114,6 +122,19 @@ async def get_messages_by_turn(pool: asyncpg.Pool, session_id: int,
         session_id, turn_id
     )
     return [dict(r) for r in rows]
+
+
+async def get_last_turn_id(pool: asyncpg.Pool, campaign_id: int) -> int:
+    """Recover the most recent turn_id across all sessions for a campaign."""
+    row = await pool.fetchrow(
+        """SELECT turn_id FROM messages
+           WHERE session_id IN (
+               SELECT id FROM sessions WHERE campaign_id = $1
+           )
+           ORDER BY created_at DESC LIMIT 1""",
+        campaign_id
+    )
+    return row["turn_id"] if row else 0
 
 
 # -- Characters ---------------------------------------------------------------
