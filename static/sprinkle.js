@@ -87,6 +87,29 @@ async function loadCampaigns() {
             info.addEventListener("click", () => resumeCampaign(c.id, c.name));
             li.appendChild(info);
 
+            const actions = document.createElement("div");
+            actions.className = "campaign-actions";
+
+            const chatExport = document.createElement("button");
+            chatExport.className = "campaign-export";
+            chatExport.textContent = "📜";
+            chatExport.title = "Download chat transcript";
+            chatExport.addEventListener("click", (e) => {
+                e.stopPropagation();
+                window.open(`/api/campaigns/${c.id}/chat.md`);
+            });
+            actions.appendChild(chatExport);
+
+            const usageExport = document.createElement("button");
+            usageExport.className = "campaign-export";
+            usageExport.textContent = "📊";
+            usageExport.title = "Download token usage CSV";
+            usageExport.addEventListener("click", (e) => {
+                e.stopPropagation();
+                window.open(`/api/campaigns/${c.id}/usage.csv`);
+            });
+            actions.appendChild(usageExport);
+
             const del = document.createElement("button");
             del.className = "campaign-delete";
             del.textContent = "✕";
@@ -95,7 +118,9 @@ async function loadCampaigns() {
                 e.stopPropagation();
                 deleteCampaign(c.id, c.name);
             });
-            li.appendChild(del);
+            actions.appendChild(del);
+
+            li.appendChild(actions);
 
             campaignList.appendChild(li);
         });
