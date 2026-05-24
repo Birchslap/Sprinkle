@@ -78,7 +78,7 @@ class GameState:
 
 # -- Message Building ---------------------------------------------------------
 
-async def _build_messages(state: GameState) -> list[dict[str, str]]:
+async def _build_messages(state: GameState) -> list[dict[str, str | dict]]:
     """Build the message list for the API call.
 
     Uses increment-and-chop for cache-friendly context management:
