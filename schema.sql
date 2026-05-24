@@ -99,6 +99,16 @@ CREATE TABLE token_usage (
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Rules reference (5e content, loaded from 5e.tools data)
+CREATE TABLE rules_reference (
+    id          SERIAL PRIMARY KEY,
+    category    TEXT NOT NULL,
+    name        TEXT NOT NULL,
+    source      TEXT,
+    content     TEXT NOT NULL,
+    search_vec  tsvector GENERATED ALWAYS AS (to_tsvector('english', name || ' ' || content)) STORED
+);
+
 -- Indexes
 CREATE INDEX idx_messages_session    ON messages(session_id, created_at);
 CREATE INDEX idx_messages_turn       ON messages(session_id, turn_id);
