@@ -18,6 +18,7 @@ from config import AppConfig
 from db import (
     create_campaign, create_session, end_session,
     save_message, get_messages, get_last_turn_id,
+    get_message_history,
 )
 from provider import (
     create_client, stream_response,
@@ -48,15 +49,24 @@ class GameState:
         self.system_prompt: str = ""
 
     async def start_campaign(self, name: str, system_prompt: str,
-                             setting: str | None = None) -> dict:
+                             setting: str | None = None,
+                             character_doc: str | None = None) -> dict:
         """Create a new campaign and its first session."""
-        campaign = await create_campaign(self.pool, name, setting)
+        campaign = await create_campaign(
+            self.pool, name, setting, character_doc=character_doc
+        )
         self.campaign_id = campaign["id"]
         self.system_prompt = system_prompt
         session = await create_session(self.pool, self.campaign_id)
         self.session_id = session["id"]
         self.turn_id = 0
         return campaign
+
+    async def get_history(self) -> list[dict]:
+        """Retrieve player-visible chat history for the current campaign."""
+        return await get_message_history(
+            self.pool, self.campaign_id, self.config.history_limit
+        )
 
     async def resume_campaign(self, campaign_id: int, system_prompt: str) -> dict:
         """Resume an existing campaign with a new session."""
