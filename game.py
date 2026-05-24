@@ -18,14 +18,14 @@ from config import AppConfig
 from db import (
     create_session, end_session,
     save_message, get_campaign_messages, get_last_turn_id,
-    get_message_history,
+    get_message_history, save_token_usage,
 )
 from provider import (
     create_client, stream_response,
     build_assistant_tool_call_message, build_tool_result_message,
 )
 from tools import TOOL_DEFINITIONS, dispatch_tool
-from types import ContentDelta, ToolCallRequest
+from types import ContentDelta, ToolCallRequest, UsageData
 
 
 # -- Constants ----------------------------------------------------------------
@@ -199,6 +199,7 @@ async def process_turn(
         # Stream and collect
         content_parts: list[str] = []
         tool_calls: list[ToolCallRequest] = []
+        usage: UsageData | None = None
 
         async for event in stream_response(
             state.client, messages, TOOL_DEFINITIONS, state.config.model
@@ -208,8 +209,21 @@ async def process_turn(
                 yield event
             elif isinstance(event, ToolCallRequest):
                 tool_calls.append(event)
+            elif isinstance(event, UsageData):
+                usage = event
 
         full_content = "".join(content_parts)
+
+        # Persist token usage for this API call
+        if usage:
+            try:
+                await save_token_usage(
+                    state.pool, state.session_id, turn_id,
+                    usage.prompt_tokens, usage.completion_tokens,
+                    usage.cached_tokens, usage.total_tokens,
+                )
+            except Exception:
+                log.exception("Failed to save token usage for turn %d", turn_id)
 
         if not tool_calls:
             # Pure content — save and finish
