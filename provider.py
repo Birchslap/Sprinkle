@@ -105,10 +105,13 @@ async def stream_response(
 
     # Yield usage data last
     if usage:
+        prompt_details = getattr(usage, "prompt_tokens_details", None)
+        cached = getattr(prompt_details, "cached_tokens", 0) if prompt_details else 0
+
         yield UsageData(
             prompt_tokens=getattr(usage, "prompt_tokens", 0) or 0,
             completion_tokens=getattr(usage, "completion_tokens", 0) or 0,
-            cached_tokens=getattr(usage, "prompt_tokens_details", {}).get("cached_tokens", 0) if hasattr(usage, "prompt_tokens_details") and usage.prompt_tokens_details else 0,
+            cached_tokens=cached or 0,
             total_tokens=getattr(usage, "total_tokens", 0) or 0,
         )
 
