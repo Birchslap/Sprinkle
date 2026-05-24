@@ -17,13 +17,16 @@ def _load_prompt(filename: str) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def build_system_prompt(campaign_name: str = "", setting: str = "") -> str:
+def build_system_prompt(campaign_name: str = "", setting: str = "",
+                        character_doc: str = "") -> str:
     """Build the full system prompt, optionally with campaign context."""
     parts = [_load_prompt("system_prompt.md")]
-    if campaign_name or setting:
+    if campaign_name or setting or character_doc:
         parts.append("\n\n# Current Campaign")
         if campaign_name:
             parts.append(f"\nCampaign: {campaign_name}")
         if setting:
             parts.append(f"\nSetting: {setting}")
+        if character_doc:
+            parts.append(f"\n\n## Player Character\n\n{character_doc}")
     return "\n".join(parts)
