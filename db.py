@@ -24,12 +24,13 @@ async def close_pool(pool: asyncpg.Pool) -> None:
 
 # -- Campaigns ----------------------------------------------------------------
 
-async def create_campaign(pool: asyncpg.Pool, name: str, setting: str | None = None) -> dict:
+async def create_campaign(pool: asyncpg.Pool, name: str, setting: str | None = None,
+                         character_doc: str | None = None) -> dict:
     row = await pool.fetchrow(
-        """INSERT INTO campaigns (name, setting)
-           VALUES ($1, $2)
+        """INSERT INTO campaigns (name, setting, character_doc)
+           VALUES ($1, $2, $3)
            RETURNING *""",
-        name, setting
+        name, setting, character_doc
     )
     return dict(row)
 
@@ -47,6 +48,14 @@ async def list_campaigns(pool: asyncpg.Pool) -> list[dict]:
         "SELECT * FROM campaigns ORDER BY updated_at DESC"
     )
     return [dict(r) for r in rows]
+
+
+async def delete_campaign(pool: asyncpg.Pool, campaign_id: int) -> bool:
+    """Delete a campaign and all associated data. CASCADE handles child rows."""
+    result = await pool.execute(
+        "DELETE FROM campaigns WHERE id = $1", campaign_id
+    )
+    return result == "DELETE 1"
 
 
 async def update_campaign_status(pool: asyncpg.Pool, campaign_id: int, status: str) -> None:
@@ -110,6 +119,30 @@ async def get_messages(pool: asyncpg.Pool, session_id: int, limit: int = 50) -> 
         session_id, limit
     )
     return [dict(r) for r in rows]
+
+
+async def get_message_history(pool: asyncpg.Pool, campaign_id: int,
+                              limit: int = 100) -> list[dict]:
+    """Player-visible chat history for a campaign.
+
+    Returns user and assistant messages only (no tool calls, tool results,
+    or system messages). This is the rendered narrative view, not the full
+    transcript the model receives via _build_messages.
+    """
+    rows = await pool.fetch(
+        """SELECT m.role, m.content, m.turn_id, m.created_at
+           FROM messages m
+           JOIN sessions s ON m.session_id = s.id
+           WHERE s.campaign_id = $1
+             AND m.role IN ('user', 'assistant')
+             AND m.tool_name IS NULL
+             AND m.tool_data IS NULL
+           ORDER BY m.created_at DESC
+           LIMIT $2""",
+        campaign_id, limit
+    )
+    # Return in chronological order (query is newest-first for LIMIT).
+    return [dict(r) for r in reversed(rows)]
 
 
 async def get_messages_by_turn(pool: asyncpg.Pool, session_id: int,
