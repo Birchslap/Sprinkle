@@ -145,6 +145,29 @@ async def get_message_history(pool: asyncpg.Pool, campaign_id: int,
     return [dict(r) for r in reversed(rows)]
 
 
+async def get_campaign_messages(
+    pool: asyncpg.Pool,
+    campaign_id: int,
+    limit: int = 150,
+) -> list[dict]:
+    """Full message history across all sessions for a campaign.
+
+    Returns ALL message types including tool calls and results — this is
+    the model's context, not the player-visible view. Newest first; caller
+    reverses to chronological order after any slicing.
+    """
+    rows = await pool.fetch(
+        """SELECT m.role, m.content, m.tool_name, m.tool_data
+           FROM messages m
+           JOIN sessions s ON m.session_id = s.id
+           WHERE s.campaign_id = $1
+           ORDER BY m.created_at DESC
+           LIMIT $2""",
+        campaign_id, limit
+    )
+    return [dict(r) for r in rows]
+
+
 async def get_messages_by_turn(pool: asyncpg.Pool, session_id: int,
                                turn_id: int) -> list[dict]:
     """All messages from a specific turn, in order."""
