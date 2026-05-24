@@ -8,6 +8,7 @@ for running the game.
 """
 
 import json
+import logging
 from contextlib import asynccontextmanager
 
 import asyncpg
@@ -19,6 +20,8 @@ from config import load_config
 from db import create_campaign, delete_campaign, get_campaign, get_message_history, list_campaigns
 from game import GameState, process_turn
 from prompts import build_system_prompt
+
+log = logging.getLogger(__name__)
 
 
 # -- App Setup ----------------------------------------------------------------
@@ -163,6 +166,7 @@ async def _game_socket(ws: WebSocket, campaign_id: int):
                     })
                 await ws.send_json({"type": "turn_end"})
             except Exception as e:
+                log.exception("Turn failed for campaign %d", campaign_id)
                 await ws.send_json({
                     "type": "error",
                     "message": f"Turn failed: {str(e)}",
@@ -171,6 +175,7 @@ async def _game_socket(ws: WebSocket, campaign_id: int):
     except WebSocketDisconnect:
         await state.end(summary="Player disconnected")
     except Exception as e:
+        log.exception("WebSocket error for campaign %d", campaign_id)
         try:
             await ws.send_json({"type": "error", "message": str(e)})
             await ws.close()
