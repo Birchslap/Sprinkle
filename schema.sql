@@ -121,3 +121,5 @@ CREATE INDEX idx_dm_notes_campaign   ON dm_notes(campaign_id, category, status);
 CREATE INDEX idx_dm_notes_turn       ON dm_notes(session_id, turn_id);
 CREATE INDEX idx_token_usage_session ON token_usage(session_id, turn_id);
 CREATE INDEX idx_sessions_campaign   ON sessions(campaign_id);
+CREATE INDEX idx_rules_search        ON rules_reference USING GIN(search_vec);
+CREATE INDEX idx_rules_category      ON rules_reference(category, name);
