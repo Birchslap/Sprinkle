@@ -87,6 +87,18 @@ CREATE TABLE dm_notes (
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- Token usage per API call
+CREATE TABLE token_usage (
+    id                  SERIAL PRIMARY KEY,
+    session_id          INTEGER NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
+    turn_id             INTEGER NOT NULL,
+    prompt_tokens       INTEGER NOT NULL DEFAULT 0,
+    completion_tokens   INTEGER NOT NULL DEFAULT 0,
+    cached_tokens       INTEGER NOT NULL DEFAULT 0,
+    total_tokens        INTEGER NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Indexes
 CREATE INDEX idx_messages_session    ON messages(session_id, created_at);
 CREATE INDEX idx_messages_turn       ON messages(session_id, turn_id);
@@ -97,4 +109,5 @@ CREATE INDEX idx_locations_campaign  ON locations(campaign_id, status);
 CREATE INDEX idx_events_campaign     ON events(campaign_id, created_at);
 CREATE INDEX idx_dm_notes_campaign   ON dm_notes(campaign_id, category, status);
 CREATE INDEX idx_dm_notes_turn       ON dm_notes(session_id, turn_id);
+CREATE INDEX idx_token_usage_session ON token_usage(session_id, turn_id);
 CREATE INDEX idx_sessions_campaign   ON sessions(campaign_id);
