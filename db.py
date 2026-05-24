@@ -24,7 +24,7 @@ async def close_pool(pool: asyncpg.Pool) -> None:
 
 # -- Campaigns ----------------------------------------------------------------
 
-async def create_campaign(pool, name: str, setting: str = None) -> dict:
+async def create_campaign(pool: asyncpg.Pool, name: str, setting: str | None = None) -> dict:
     row = await pool.fetchrow(
         """INSERT INTO campaigns (name, setting)
            VALUES ($1, $2)
@@ -34,14 +34,14 @@ async def create_campaign(pool, name: str, setting: str = None) -> dict:
     return dict(row)
 
 
-async def get_campaign(pool, campaign_id: int) -> dict | None:
+async def get_campaign(pool: asyncpg.Pool, campaign_id: int) -> dict | None:
     row = await pool.fetchrow(
         "SELECT * FROM campaigns WHERE id = $1", campaign_id
     )
     return dict(row) if row else None
 
 
-async def update_campaign_status(pool, campaign_id: int, status: str) -> None:
+async def update_campaign_status(pool: asyncpg.Pool, campaign_id: int, status: str) -> None:
     await pool.execute(
         """UPDATE campaigns SET status = $1, updated_at = now()
            WHERE id = $2""",
@@ -51,7 +51,7 @@ async def update_campaign_status(pool, campaign_id: int, status: str) -> None:
 
 # -- Sessions -----------------------------------------------------------------
 
-async def create_session(pool, campaign_id: int) -> dict:
+async def create_session(pool: asyncpg.Pool, campaign_id: int) -> dict:
     row = await pool.fetchrow(
         """INSERT INTO sessions (campaign_id)
            VALUES ($1)
@@ -61,7 +61,7 @@ async def create_session(pool, campaign_id: int) -> dict:
     return dict(row)
 
 
-async def end_session(pool, session_id: int, summary: str = None) -> None:
+async def end_session(pool: asyncpg.Pool, session_id: int, summary: str | None = None) -> None:
     await pool.execute(
         """UPDATE sessions SET ended_at = now(), summary = $1
            WHERE id = $2""",
@@ -69,7 +69,7 @@ async def end_session(pool, session_id: int, summary: str = None) -> None:
     )
 
 
-async def get_session(pool, session_id: int) -> dict | None:
+async def get_session(pool: asyncpg.Pool, session_id: int) -> dict | None:
     row = await pool.fetchrow(
         "SELECT * FROM sessions WHERE id = $1", session_id
     )
@@ -78,9 +78,9 @@ async def get_session(pool, session_id: int) -> dict | None:
 
 # -- Messages -----------------------------------------------------------------
 
-async def save_message(pool, session_id: int, turn_id: int, role: str,
-                       content: str, tool_name: str = None,
-                       tool_data: dict = None) -> dict:
+async def save_message(pool: asyncpg.Pool, session_id: int, turn_id: int, role: str,
+                       content: str, tool_name: str | None = None,
+                       tool_data: dict | None = None) -> dict:
     row = await pool.fetchrow(
         """INSERT INTO messages (session_id, turn_id, role, content,
                                 tool_name, tool_data)
@@ -92,7 +92,7 @@ async def save_message(pool, session_id: int, turn_id: int, role: str,
     return dict(row)
 
 
-async def get_messages(pool, session_id: int, limit: int = 50) -> list[dict]:
+async def get_messages(pool: asyncpg.Pool, session_id: int, limit: int = 50) -> list[dict]:
     """Most recent messages first. Flip order in the caller if needed."""
     rows = await pool.fetch(
         """SELECT * FROM messages
@@ -104,7 +104,7 @@ async def get_messages(pool, session_id: int, limit: int = 50) -> list[dict]:
     return [dict(r) for r in rows]
 
 
-async def get_messages_by_turn(pool, session_id: int,
+async def get_messages_by_turn(pool: asyncpg.Pool, session_id: int,
                                turn_id: int) -> list[dict]:
     """All messages from a specific turn, in order."""
     rows = await pool.fetch(
@@ -118,9 +118,9 @@ async def get_messages_by_turn(pool, session_id: int,
 
 # -- Characters ---------------------------------------------------------------
 
-async def save_character(pool, campaign_id: int, name: str,
-                         character_type: str, description: str = None,
-                         stats: dict = None, notes: str = None) -> dict:
+async def save_character(pool: asyncpg.Pool, campaign_id: int, name: str,
+                         character_type: str, description: str | None = None,
+                         stats: dict | None = None, notes: str | None = None) -> dict:
     """Upsert: creates or updates by (campaign_id, name)."""
     row = await pool.fetchrow(
         """INSERT INTO characters
@@ -139,7 +139,7 @@ async def save_character(pool, campaign_id: int, name: str,
     return dict(row)
 
 
-async def get_character(pool, campaign_id: int, name: str) -> dict | None:
+async def get_character(pool: asyncpg.Pool, campaign_id: int, name: str) -> dict | None:
     row = await pool.fetchrow(
         """SELECT * FROM characters
            WHERE campaign_id = $1 AND name = $2""",
@@ -148,8 +148,8 @@ async def get_character(pool, campaign_id: int, name: str) -> dict | None:
     return dict(row) if row else None
 
 
-async def list_characters(pool, campaign_id: int,
-                          character_type: str = None,
+async def list_characters(pool: asyncpg.Pool, campaign_id: int,
+                          character_type: str | None = None,
                           status: str = "active") -> list[dict]:
     """Browse layer: names and metadata, no full stats blob."""
     if character_type:
@@ -171,7 +171,7 @@ async def list_characters(pool, campaign_id: int,
     return [dict(r) for r in rows]
 
 
-async def update_character_status(pool, campaign_id: int, name: str,
+async def update_character_status(pool: asyncpg.Pool, campaign_id: int, name: str,
                                   status: str) -> None:
     await pool.execute(
         """UPDATE characters SET status = $1, updated_at = now()
@@ -182,9 +182,9 @@ async def update_character_status(pool, campaign_id: int, name: str,
 
 # -- Locations ----------------------------------------------------------------
 
-async def save_location(pool, campaign_id: int, name: str,
-                        description: str = None,
-                        notes: str = None) -> dict:
+async def save_location(pool: asyncpg.Pool, campaign_id: int, name: str,
+                        description: str | None = None,
+                        notes: str | None = None) -> dict:
     """Upsert: creates or updates by (campaign_id, name)."""
     row = await pool.fetchrow(
         """INSERT INTO locations (campaign_id, name, description, notes)
@@ -199,7 +199,7 @@ async def save_location(pool, campaign_id: int, name: str,
     return dict(row)
 
 
-async def get_location(pool, campaign_id: int, name: str) -> dict | None:
+async def get_location(pool: asyncpg.Pool, campaign_id: int, name: str) -> dict | None:
     row = await pool.fetchrow(
         """SELECT * FROM locations
            WHERE campaign_id = $1 AND name = $2""",
@@ -208,7 +208,7 @@ async def get_location(pool, campaign_id: int, name: str) -> dict | None:
     return dict(row) if row else None
 
 
-async def list_locations(pool, campaign_id: int,
+async def list_locations(pool: asyncpg.Pool, campaign_id: int,
                          status: str = "active") -> list[dict]:
     """Browse layer: names and metadata only."""
     rows = await pool.fetch(
@@ -223,9 +223,9 @@ async def list_locations(pool, campaign_id: int,
 
 # -- Events -------------------------------------------------------------------
 
-async def save_event(pool, campaign_id: int, session_id: int, turn_id: int,
-                     summary: str, details: str = None,
-                     significance: str = None) -> dict:
+async def save_event(pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+                     summary: str, details: str | None = None,
+                     significance: str | None = None) -> dict:
     row = await pool.fetchrow(
         """INSERT INTO events
                (campaign_id, session_id, turn_id, summary, details, significance)
@@ -236,7 +236,7 @@ async def save_event(pool, campaign_id: int, session_id: int, turn_id: int,
     return dict(row)
 
 
-async def get_events(pool, campaign_id: int, limit: int = 50) -> list[dict]:
+async def get_events(pool: asyncpg.Pool, campaign_id: int, limit: int = 50) -> list[dict]:
     rows = await pool.fetch(
         """SELECT * FROM events
            WHERE campaign_id = $1
@@ -249,9 +249,9 @@ async def get_events(pool, campaign_id: int, limit: int = 50) -> list[dict]:
 
 # -- DM Notes -----------------------------------------------------------------
 
-async def save_dm_note(pool, campaign_id: int, session_id: int, turn_id: int,
+async def save_dm_note(pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
                        category: str, title: str, content: str,
-                       reasoning: str = None) -> dict:
+                       reasoning: str | None = None) -> dict:
     row = await pool.fetchrow(
         """INSERT INTO dm_notes
                (campaign_id, session_id, turn_id, category,
@@ -263,7 +263,7 @@ async def save_dm_note(pool, campaign_id: int, session_id: int, turn_id: int,
     return dict(row)
 
 
-async def list_dm_notes(pool, campaign_id: int, category: str = None,
+async def list_dm_notes(pool: asyncpg.Pool, campaign_id: int, category: str | None = None,
                         status: str = "active") -> list[dict]:
     """Browse layer: titles and metadata, no full content."""
     if category:
@@ -287,7 +287,7 @@ async def list_dm_notes(pool, campaign_id: int, category: str = None,
     return [dict(r) for r in rows]
 
 
-async def get_dm_note(pool, note_id: int) -> dict | None:
+async def get_dm_note(pool: asyncpg.Pool, note_id: int) -> dict | None:
     """Full content retrieval for a specific note."""
     row = await pool.fetchrow(
         "SELECT * FROM dm_notes WHERE id = $1", note_id
@@ -295,9 +295,9 @@ async def get_dm_note(pool, note_id: int) -> dict | None:
     return dict(row) if row else None
 
 
-async def update_dm_note(pool, note_id: int, content: str = None,
-                         reasoning: str = None,
-                         status: str = None) -> dict | None:
+async def update_dm_note(pool: asyncpg.Pool, note_id: int, content: str | None = None,
+                         reasoning: str | None = None,
+                         status: str | None = None) -> dict | None:
     """Update specific fields on a note. Only non-None values change."""
     fields = []
     values = []
