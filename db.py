@@ -485,6 +485,42 @@ async def get_campaign_usage_detail(
     return [dict(r) for r in rows]
 
 
+async def search_rules(
+    pool: asyncpg.Pool,
+    query: str,
+    category: str | None = None,
+    limit: int = 5,
+) -> list[dict]:
+    """Search the rules reference using full-text search.
+
+    Returns matching entries ranked by relevance. Optionally filter
+    by category (e.g., 'monster', 'spell', 'race', 'class').
+    """
+    tsquery = " & ".join(query.strip().split())
+    if category:
+        rows = await pool.fetch(
+            """SELECT name, category, source, content,
+                      ts_rank(search_vector, to_tsquery('english', $1)) AS rank
+               FROM rules_reference
+               WHERE search_vector @@ to_tsquery('english', $1)
+                 AND category = $2
+               ORDER BY rank DESC
+               LIMIT $3""",
+            tsquery, category, limit
+        )
+    else:
+        rows = await pool.fetch(
+            """SELECT name, category, source, content,
+                      ts_rank(search_vector, to_tsquery('english', $1)) AS rank
+               FROM rules_reference
+               WHERE search_vector @@ to_tsquery('english', $1)
+               ORDER BY rank DESC
+               LIMIT $2""",
+            tsquery, limit
+        )
+    return [dict(r) for r in rows]
+
+
 async def get_campaign_usage(
     pool: asyncpg.Pool,
     campaign_id: int,
