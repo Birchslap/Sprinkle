@@ -14,7 +14,7 @@ import asyncpg
 from config import AppConfig
 from db import (
     create_campaign, create_session, end_session,
-    save_message, get_messages,
+    save_message, get_messages, get_last_turn_id,
 )
 from provider import (
     create_client, stream_response,
@@ -45,7 +45,7 @@ class GameState:
         self.system_prompt: str = ""
 
     async def start_campaign(self, name: str, system_prompt: str,
-                             setting: str = None) -> dict:
+                             setting: str | None = None) -> dict:
         """Create a new campaign and its first session."""
         campaign = await create_campaign(self.pool, name, setting)
         self.campaign_id = campaign["id"]
@@ -61,19 +61,10 @@ class GameState:
         self.system_prompt = system_prompt
         session = await create_session(self.pool, self.campaign_id)
         self.session_id = session["id"]
-        # Recover turn_id from the most recent message in any session
-        rows = await self.pool.fetch(
-            """SELECT turn_id FROM messages
-               WHERE session_id IN (
-                   SELECT id FROM sessions WHERE campaign_id = $1
-               )
-               ORDER BY created_at DESC LIMIT 1""",
-            self.campaign_id
-        )
-        self.turn_id = rows[0]["turn_id"] if rows else 0
+        self.turn_id = await get_last_turn_id(self.pool, self.campaign_id)
         return {"campaign_id": campaign_id, "session_id": session["id"]}
 
-    async def end(self, summary: str = None) -> None:
+    async def end(self, summary: str | None = None) -> None:
         """End the current session."""
         if self.session_id:
             await end_session(self.pool, self.session_id, summary)
@@ -81,7 +72,7 @@ class GameState:
 
 # -- Message Building ---------------------------------------------------------
 
-async def _build_messages(state: GameState) -> list[dict]:
+async def _build_messages(state: GameState) -> list[dict[str, str]]:
     """Build the message list for the API call.
 
     Structure: system prompt, then recent history in chronological order.
