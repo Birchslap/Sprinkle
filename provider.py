@@ -10,7 +10,7 @@ import json
 from openai import AsyncOpenAI
 
 from config import ModelConfig
-from types import ContentDelta, ToolCallRequest
+from types import ContentDelta, ToolCallRequest, UsageData
 
 
 # ============================================================
@@ -53,12 +53,18 @@ async def stream_response(
         max_tokens=config.max_tokens,
         temperature=config.temperature,
         stream=True,
+        stream_options={"include_usage": True},
     )
 
     # Tool call deltas arrive in pieces — accumulate by index
     accumulated_tool_calls = {}
+    usage = None
 
     async for chunk in stream:
+        # Final chunk carries usage data but no choices
+        if hasattr(chunk, "usage") and chunk.usage:
+            usage = chunk.usage
+
         if not chunk.choices:
             continue
         delta = chunk.choices[0].delta
@@ -95,6 +101,15 @@ async def stream_response(
             id=tc["id"],
             name=tc["name"],
             arguments=args,
+        )
+
+    # Yield usage data last
+    if usage:
+        yield UsageData(
+            prompt_tokens=getattr(usage, "prompt_tokens", 0) or 0,
+            completion_tokens=getattr(usage, "completion_tokens", 0) or 0,
+            cached_tokens=getattr(usage, "prompt_tokens_details", {}).get("cached_tokens", 0) if hasattr(usage, "prompt_tokens_details") and usage.prompt_tokens_details else 0,
+            total_tokens=getattr(usage, "total_tokens", 0) or 0,
         )
 
 
