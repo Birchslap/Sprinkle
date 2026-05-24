@@ -431,6 +431,37 @@ async def save_token_usage(
     return dict(row)
 
 
+async def get_campaign_usage_detail(
+    pool: asyncpg.Pool,
+    campaign_id: int,
+) -> list[dict]:
+    """Per-call token usage rows for CSV export.
+
+    Returns one row per API call in chronological order, with session_id,
+    turn_id, all token counts, cache hit rate, and timestamp.
+    """
+    rows = await pool.fetch(
+        """SELECT
+               t.session_id,
+               t.turn_id,
+               t.prompt_tokens,
+               t.completion_tokens,
+               t.cached_tokens,
+               t.total_tokens,
+               CASE WHEN t.prompt_tokens > 0
+                    THEN ROUND(t.cached_tokens::numeric / t.prompt_tokens * 100, 1)
+                    ELSE 0
+               END AS cache_hit_pct,
+               t.created_at
+           FROM token_usage t
+           JOIN sessions s ON t.session_id = s.id
+           WHERE s.campaign_id = $1
+           ORDER BY t.created_at""",
+        campaign_id
+    )
+    return [dict(r) for r in rows]
+
+
 async def get_campaign_usage(
     pool: asyncpg.Pool,
     campaign_id: int,
