@@ -8,10 +8,10 @@ for running the game.
 """
 
 import json
-import asyncio
+from contextlib import asynccontextmanager
 
 import asyncpg
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
@@ -24,22 +24,17 @@ from prompts import build_system_prompt
 # -- App Setup ----------------------------------------------------------------
 
 config = load_config()
-app = FastAPI(title="Sprinkle", version="0.1.0")
-
-# Connection pool — created on startup, closed on shutdown
-pool: asyncpg.Pool | None = None
 
 
-@app.on_event("startup")
-async def _startup():
-    global pool
-    pool = await asyncpg.create_pool(config.database.url)
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage the connection pool across the app's lifetime."""
+    app.state.pool = await asyncpg.create_pool(config.database.url)
+    yield
+    await app.state.pool.close()
 
 
-@app.on_event("shutdown")
-async def _shutdown():
-    if pool:
-        await pool.close()
+app = FastAPI(title="Sprinkle", version="0.1.0", lifespan=lifespan)
 
 
 # -- Static Files & Frontend --------------------------------------------------
@@ -55,28 +50,28 @@ async def _index():
 # -- REST Endpoints -----------------------------------------------------------
 
 @app.get("/api/campaigns")
-async def _list_campaigns():
+async def _list_campaigns(request: Request):
     """List all campaigns."""
-    rows = await list_campaigns(pool)
-    return {"campaigns": [dict(r) for r in rows]}
+    rows = await list_campaigns(request.app.state.pool)
+    return {"campaigns": rows}
 
 
 @app.post("/api/campaigns")
-async def _create_campaign(body: dict):
+async def _create_campaign(request: Request, body: dict):
     """Create a new campaign."""
     name = body.get("name", "Untitled Campaign")
     setting = body.get("setting")
-    campaign = await create_campaign(pool, name, setting)
-    return {"campaign": dict(campaign)}
+    campaign = await create_campaign(request.app.state.pool, name, setting)
+    return {"campaign": campaign}
 
 
 @app.get("/api/campaigns/{campaign_id}")
-async def _get_campaign(campaign_id: int):
+async def _get_campaign(request: Request, campaign_id: int):
     """Get a single campaign."""
-    campaign = await get_campaign(pool, campaign_id)
+    campaign = await get_campaign(request.app.state.pool, campaign_id)
     if not campaign:
         return {"error": "Campaign not found"}
-    return {"campaign": dict(campaign)}
+    return {"campaign": campaign}
 
 
 # -- WebSocket Game Endpoint --------------------------------------------------
@@ -97,6 +92,7 @@ async def _game_socket(ws: WebSocket, campaign_id: int):
     """
     await ws.accept()
 
+    pool = ws.app.state.pool
     state = GameState(pool, config)
 
     try:
