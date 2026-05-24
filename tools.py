@@ -7,9 +7,29 @@ Defines what tools the model can call and how each call is executed.
 """
 
 import json
+import logging
 import random
 import re
 from typing import Any
+
+import asyncpg
+
+from db import (
+    get_character,
+    get_dm_note,
+    get_location,
+    get_messages_by_turn,
+    list_characters,
+    list_dm_notes,
+    list_locations,
+    save_character,
+    save_dm_note,
+    save_event,
+    save_location,
+    update_dm_note,
+)
+
+log = logging.getLogger(__name__)
 
 
 # ============================================================
@@ -379,12 +399,17 @@ TOOL_DEFINITIONS = [
 # Tool Handlers
 # ============================================================
 
-async def _handle_roll_dice(pool, campaign_id, session_id, turn_id, args):
+async def _handle_roll_dice(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
     return roll_dice(args["expression"])
 
 
-async def _handle_save_character(pool, campaign_id, session_id, turn_id, args):
-    from db import save_character
+async def _handle_save_character(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
     result = await save_character(
         pool, campaign_id,
         name=args["name"],
@@ -396,24 +421,30 @@ async def _handle_save_character(pool, campaign_id, session_id, turn_id, args):
     return {"saved": args["name"], "id": result["id"]}
 
 
-async def _handle_get_character(pool, campaign_id, session_id, turn_id, args):
-    from db import get_character
+async def _handle_get_character(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
     row = await get_character(pool, campaign_id, args["name"])
     if not row:
         return {"error": f"No character named '{args['name']}' found."}
     return row
 
 
-async def _handle_list_characters(pool, campaign_id, session_id, turn_id, args):
-    from db import list_characters
+async def _handle_list_characters(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
     rows = await list_characters(
         pool, campaign_id, character_type=args.get("character_type"),
     )
     return {"characters": rows}
 
 
-async def _handle_save_location(pool, campaign_id, session_id, turn_id, args):
-    from db import save_location
+async def _handle_save_location(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
     result = await save_location(
         pool, campaign_id,
         name=args["name"],
@@ -423,22 +454,28 @@ async def _handle_save_location(pool, campaign_id, session_id, turn_id, args):
     return {"saved": args["name"], "id": result["id"]}
 
 
-async def _handle_get_location(pool, campaign_id, session_id, turn_id, args):
-    from db import get_location
+async def _handle_get_location(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
     row = await get_location(pool, campaign_id, args["name"])
     if not row:
         return {"error": f"No location named '{args['name']}' found."}
     return row
 
 
-async def _handle_list_locations(pool, campaign_id, session_id, turn_id, args):
-    from db import list_locations
+async def _handle_list_locations(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
     rows = await list_locations(pool, campaign_id)
     return {"locations": rows}
 
 
-async def _handle_save_event(pool, campaign_id, session_id, turn_id, args):
-    from db import save_event
+async def _handle_save_event(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
     result = await save_event(
         pool, campaign_id, session_id, turn_id,
         summary=args["summary"],
@@ -448,8 +485,10 @@ async def _handle_save_event(pool, campaign_id, session_id, turn_id, args):
     return {"saved": args["summary"], "id": result["id"]}
 
 
-async def _handle_save_dm_note(pool, campaign_id, session_id, turn_id, args):
-    from db import save_dm_note
+async def _handle_save_dm_note(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
     result = await save_dm_note(
         pool, campaign_id, session_id, turn_id,
         category=args["category"],
@@ -460,16 +499,20 @@ async def _handle_save_dm_note(pool, campaign_id, session_id, turn_id, args):
     return {"saved": args["title"], "id": result["id"]}
 
 
-async def _handle_get_dm_note(pool, campaign_id, session_id, turn_id, args):
-    from db import get_dm_note
+async def _handle_get_dm_note(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
     row = await get_dm_note(pool, args["note_id"])
     if not row:
         return {"error": f"No note with ID {args['note_id']} found."}
     return row
 
 
-async def _handle_list_dm_notes(pool, campaign_id, session_id, turn_id, args):
-    from db import list_dm_notes
+async def _handle_list_dm_notes(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
     rows = await list_dm_notes(
         pool, campaign_id,
         category=args.get("category"),
@@ -478,8 +521,10 @@ async def _handle_list_dm_notes(pool, campaign_id, session_id, turn_id, args):
     return {"notes": rows}
 
 
-async def _handle_update_dm_note(pool, campaign_id, session_id, turn_id, args):
-    from db import update_dm_note
+async def _handle_update_dm_note(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
     result = await update_dm_note(
         pool, args["note_id"],
         content=args.get("content"),
@@ -489,8 +534,10 @@ async def _handle_update_dm_note(pool, campaign_id, session_id, turn_id, args):
     return {"updated": args["note_id"]}
 
 
-async def _handle_get_turn_context(pool, campaign_id, session_id, turn_id, args):
-    from db import get_messages_by_turn
+async def _handle_get_turn_context(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
     rows = await get_messages_by_turn(pool, session_id, args["turn_id"])
     return {"turn_id": args["turn_id"], "messages": rows}
 
@@ -516,9 +563,10 @@ _HANDLERS = {
 }
 
 
-async def dispatch_tool(name: str, pool, campaign_id: int,
-                        session_id: int, turn_id: int,
-                        args: dict) -> str:
+async def dispatch_tool(
+    name: str, pool: asyncpg.Pool, campaign_id: int,
+    session_id: int, turn_id: int, args: dict[str, Any],
+) -> str:
     """Route a tool call to its handler and return a JSON result string."""
     handler = _HANDLERS.get(name)
     if not handler:
@@ -527,4 +575,5 @@ async def dispatch_tool(name: str, pool, campaign_id: int,
         result = await handler(pool, campaign_id, session_id, turn_id, args)
         return json.dumps(result, default=str)
     except Exception as e:
+        log.exception("Tool '%s' failed with args %s", name, args)
         return json.dumps({"error": str(e)})
