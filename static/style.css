@@ -514,6 +514,8 @@ body {
 }
 
 .campaign-item {
+    display: flex;
+    align-items: center;
     background: #1a1a2e;
     border: 1px solid #2a2a4a;
     border-radius: 4px;
@@ -609,11 +611,6 @@ body {
 
 .campaign-delete:hover {
     color: #bf616a;
-}
-
-.campaign-item {
-    display: flex;
-    align-items: center;
 }
 
 .campaign-item-info {
