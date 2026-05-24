@@ -431,6 +431,29 @@ async def save_token_usage(
     return dict(row)
 
 
+async def get_chat_export(
+    pool: asyncpg.Pool,
+    campaign_id: int,
+) -> list[dict]:
+    """Full player-visible message history for export.
+
+    Returns all user and assistant messages in chronological order
+    with no limit. Used for markdown chat transcript downloads.
+    """
+    rows = await pool.fetch(
+        """SELECT m.role, m.content, m.turn_id, m.created_at
+           FROM messages m
+           JOIN sessions s ON m.session_id = s.id
+           WHERE s.campaign_id = $1
+             AND m.role IN ('user', 'assistant')
+             AND m.tool_name IS NULL
+             AND m.tool_data IS NULL
+           ORDER BY m.created_at""",
+        campaign_id
+    )
+    return [dict(r) for r in rows]
+
+
 async def get_campaign_usage_detail(
     pool: asyncpg.Pool,
     campaign_id: int,
