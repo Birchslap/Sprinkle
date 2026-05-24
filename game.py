@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 from config import AppConfig
 from db import (
     create_session, end_session,
-    save_message, get_messages, get_last_turn_id,
+    save_message, get_campaign_messages, get_last_turn_id,
     get_message_history,
 )
 from provider import (
@@ -81,17 +81,30 @@ class GameState:
 async def _build_messages(state: GameState) -> list[dict[str, str]]:
     """Build the message list for the API call.
 
-    Structure: system prompt, then recent history in chronological order.
-    History is pulled from the database so it survives across reconnections.
+    Uses increment-and-chop for cache-friendly context management:
+    - Messages accumulate up to message_window_max (default 150).
+    - When the ceiling is hit, only the most recent message_window_chop
+      (default 50) are kept.
+    - Between chops the message prefix is stable, enabling API-level
+      prompt caching across consecutive turns.
     """
     messages = [{"role": "system", "content": state.system_prompt}]
 
-    rows = await get_messages(state.pool, state.session_id, state.config.model_history_limit)
-    rows.reverse()  # get_messages returns newest-first
+    cfg = state.config
+    rows = await get_campaign_messages(
+        state.pool, state.campaign_id, limit=cfg.message_window_max
+    )
+
+    # Increment-and-chop: if we've hit the ceiling, keep only the most
+    # recent chop-worth of messages. One cache miss, then the new shorter
+    # prefix stays stable as it grows again.
+    if len(rows) >= cfg.message_window_max:
+        rows = rows[:cfg.message_window_chop]
+
+    rows.reverse()  # chronological — oldest first for stable cache prefix
 
     for row in rows:
         if row.get("tool_name"):
-            # Tool result message
             tool_data = row.get("tool_data") or {}
             messages.append({
                 "role": "tool",
@@ -99,7 +112,6 @@ async def _build_messages(state: GameState) -> list[dict[str, str]]:
                 "content": row["content"],
             })
         elif row["role"] == "assistant" and row.get("tool_data"):
-            # Assistant message containing tool calls
             messages.append(row["tool_data"])
         else:
             messages.append({
