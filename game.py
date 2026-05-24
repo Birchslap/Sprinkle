@@ -31,7 +31,6 @@ from types import ContentDelta, ToolCallRequest
 # -- Constants ----------------------------------------------------------------
 
 MAX_TOOL_ROUNDS = 15
-HISTORY_LIMIT = 50
 
 
 # -- Game State ---------------------------------------------------------------
@@ -87,7 +86,7 @@ async def _build_messages(state: GameState) -> list[dict[str, str]]:
     """
     messages = [{"role": "system", "content": state.system_prompt}]
 
-    rows = await get_messages(state.pool, state.session_id, HISTORY_LIMIT)
+    rows = await get_messages(state.pool, state.session_id, state.config.model_history_limit)
     rows.reverse()  # get_messages returns newest-first
 
     for row in rows:
