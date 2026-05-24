@@ -30,6 +30,7 @@ class AppConfig:
     database: DatabaseConfig
     host: str = "127.0.0.1"
     port: int = 8000
+    history_limit: int = 100
 
 
 def load_config() -> AppConfig:
@@ -46,4 +47,5 @@ def load_config() -> AppConfig:
         ),
         host=os.environ.get("SPRINKLE_HOST", "127.0.0.1"),
         port=int(os.environ.get("SPRINKLE_PORT", "8000")),
+        history_limit=int(os.environ.get("SPRINKLE_HISTORY_LIMIT", "100")),
     )
