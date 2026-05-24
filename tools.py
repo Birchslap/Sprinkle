@@ -28,7 +28,7 @@ from db import (
     save_location,
     update_dm_note,
 )
-from db import update_character_status
+from db import search_rules, update_character_status
 
 log = logging.getLogger(__name__)
 
@@ -401,6 +401,37 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "search_rules",
+            "description": (
+                "Search the D&D 5E rules reference for authoritative information. "
+                "Use this to look up monster stat blocks, spell descriptions, "
+                "race traits, class features, items, feats, conditions, and "
+                "any other rules content. Always prefer this over memory for "
+                "specific mechanical details."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Search terms (e.g., 'firbolg', 'fireball', 'beholder').",
+                    },
+                    "category": {
+                        "type": "string",
+                        "enum": [
+                            "monster", "spell", "race", "class", "subclass",
+                            "item", "feat", "background", "condition",
+                        ],
+                        "description": "Filter by category. Omit to search all.",
+                    },
+                },
+                "required": ["query"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_turn_context",
             "description": (
                 "Retrieve all messages from a specific turn. "
@@ -571,6 +602,20 @@ async def _handle_update_dm_note(
     return {"updated": args["note_id"]}
 
 
+async def _handle_search_rules(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
+    rows = await search_rules(
+        pool, query=args["query"], category=args.get("category"),
+    )
+    if not rows:
+        return {"results": [], "message": f"No rules entries found for '{args['query']}'."}
+    return {"results": [{"name": r["name"], "category": r["category"],
+                          "source": r["source"], "content": r["content"]}
+                         for r in rows]}
+
+
 async def _handle_get_turn_context(
     pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
     args: dict[str, Any],
@@ -597,6 +642,7 @@ _HANDLERS = {
     "get_dm_note": _handle_get_dm_note,
     "list_dm_notes": _handle_list_dm_notes,
     "update_dm_note": _handle_update_dm_note,
+    "search_rules": _handle_search_rules,
     "get_turn_context": _handle_get_turn_context,
 }
 
