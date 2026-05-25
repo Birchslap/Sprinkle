@@ -10,7 +10,7 @@ import json
 from openai import AsyncOpenAI
 
 from config import ModelConfig
-from types import ContentDelta, ToolCallRequest, UsageData
+from models import ContentDelta, ToolCallRequest, UsageData
 
 
 # ============================================================
