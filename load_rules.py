@@ -8,6 +8,9 @@ Defaults to ./resources/data if no path is given.
 Connects to PostgreSQL using DATABASE_URL from .env or environment.
 """
 
+from dotenv import load_dotenv
+load_dotenv()
+
 import asyncio
 import json
 import os
