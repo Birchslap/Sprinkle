@@ -566,7 +566,7 @@ async def load(data_path: str):
         return
 
     # Load into PostgreSQL
-    conn = await asyncpg.connect(db_url)
+    conn = await asyncpg.connect(db_url, ssl=False)
     try:
         # Clear existing data
         await conn.execute("DELETE FROM rules_reference")
