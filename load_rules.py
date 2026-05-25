@@ -503,11 +503,12 @@ def process_file(filepath: Path) -> list[tuple[str, str, str, str]]:
     try:
         with open(filepath, "r", encoding="utf-8") as f:
             data = json.load(f)
-    if not isinstance(data, dict):
-        return []
     except (json.JSONDecodeError, UnicodeDecodeError) as e:
         print(f"  Skipping {filepath.name}: {e}")
         return rows
+
+    if not isinstance(data, dict):
+        return []
 
     for key, (category, flattener) in PROCESSORS.items():
         entries = data.get(key, [])
