@@ -8,9 +8,6 @@ Defaults to ./resources/data if no path is given.
 Connects to PostgreSQL using DATABASE_URL from .env or environment.
 """
 
-from dotenv import load_dotenv
-load_dotenv()
-
 import asyncio
 import json
 import os
@@ -19,9 +16,15 @@ import sys
 from pathlib import Path
 
 import asyncpg
-from dotenv import load_dotenv
 
-load_dotenv()
+# Load .env without external dependency
+_env_path = Path(__file__).parent / '.env'
+if _env_path.exists():
+    for _line in _env_path.read_text().splitlines():
+        _line = _line.strip()
+        if _line and not _line.startswith('#') and '=' in _line:
+            _k, _v = _line.split('=', 1)
+            os.environ.setdefault(_k.strip(), _v.strip())
 
 # ---------------------------------------------------------------------------
 # Markup stripper
