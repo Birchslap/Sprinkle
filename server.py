@@ -11,7 +11,21 @@ import csv
 import io
 import json
 import logging
+import sys
 from contextlib import asynccontextmanager
+
+# -- Logging ------------------------------------------------------------------
+# Configure root logger so every module's log output is visible in the terminal.
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s  %(levelname)-8s  %(name)s  %(message)s",
+    datefmt="%H:%M:%S",
+    stream=sys.stderr,
+)
+# Quiet down noisy libraries
+logging.getLogger("asyncpg").setLevel(logging.WARNING)
+logging.getLogger("httpcore").setLevel(logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 
 import asyncpg
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, Request
