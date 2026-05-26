@@ -227,6 +227,14 @@ function handleServerMessage(msg) {
         case "history":
             renderHistoryMessage(msg.role, msg.content);
             break;
+        case "ready":
+            if (isNewCampaign) {
+                // Automatically trigger the DM's opening narration.
+                ws.send(JSON.stringify({ type: "message", content: "[BEGIN CAMPAIGN]" }));
+                isNewCampaign = false;
+                disableInput(); // Wait for DM response.
+            }
+            break;
         case "history_end":
             scrollToBottom();
             enableInput();
