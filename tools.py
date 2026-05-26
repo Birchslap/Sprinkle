@@ -28,7 +28,7 @@ from db import (
     save_location,
     update_dm_note,
 )
-from db import search_rules, update_character_status
+from db import get_protocol, search_rules, update_character_status
 
 log = logging.getLogger(__name__)
 
@@ -432,6 +432,31 @@ TOOL_DEFINITIONS = [
     {
         "type": "function",
         "function": {
+            "name": "get_protocol",
+            "description": (
+                "Retrieve a DM protocol by name. These are detailed "
+                "reference documents for specific DM tasks. Call the "
+                "appropriate protocol before performing the task it covers."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "enum": [
+                            "npc_generation", "npc_behavior",
+                            "npc_introduction", "npc_promotion",
+                        ],
+                        "description": "Protocol name.",
+                    }
+                },
+                "required": ["name"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "get_turn_context",
             "description": (
                 "Retrieve all messages from a specific turn. "
@@ -616,6 +641,16 @@ async def _handle_search_rules(
                          for r in rows]}
 
 
+async def _handle_get_protocol(
+    pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
+    args: dict[str, Any],
+) -> dict:
+    row = await get_protocol(pool, args["name"])
+    if not row:
+        return {"error": f"No protocol named '{args['name']}' found."}
+    return {"protocol": row["title"], "content": row["content"]}
+
+
 async def _handle_get_turn_context(
     pool: asyncpg.Pool, campaign_id: int, session_id: int, turn_id: int,
     args: dict[str, Any],
@@ -643,6 +678,7 @@ _HANDLERS = {
     "list_dm_notes": _handle_list_dm_notes,
     "update_dm_note": _handle_update_dm_note,
     "search_rules": _handle_search_rules,
+    "get_protocol": _handle_get_protocol,
     "get_turn_context": _handle_get_turn_context,
 }
 
