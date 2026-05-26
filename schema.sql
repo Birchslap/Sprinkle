@@ -109,6 +109,14 @@ CREATE TABLE rules_reference (
     search_vec  tsvector GENERATED ALWAYS AS (to_tsvector('english', name || ' ' || content)) STORED
 );
 
+-- DM Protocols (callable reference documents)
+CREATE TABLE dm_protocols (
+    name        TEXT PRIMARY KEY,
+    title       TEXT NOT NULL,
+    content     TEXT NOT NULL,
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- Indexes
 CREATE INDEX idx_messages_session    ON messages(session_id, created_at);
 CREATE INDEX idx_messages_turn       ON messages(session_id, turn_id);
