@@ -12,7 +12,7 @@ Less is more. Two precise details create a stronger impression than six adequate
 
 ## Method
 
-Draw from the character you have already built. The generation process gave this NPC a physical description, a distinguishing habit or physical reality, a voice derived from their mental triad, and a surface impression. The introduction is the *performance* of that material — translated into 2-4 sentences of natural prose that flow as a DM would speak them across the table.
+Draw from the character entry. Whether this NPC was just generated, pre-built before the campaign, or promoted from a lower tier, their entry contains a physical description, a distinguishing habit or physical reality, a voice derived from their mental triad, and a surface impression. The introduction is the *performance* of that material — translated into 2-4 sentences of natural prose that flow as a DM would speak them across the table.
 
 Your internal reference points are: physical frame and build, coloring, face, dress and what it signals, manner and movement, and the distinguishing detail from generation. These are not output categories. Players see prose, not a checklist.
 
