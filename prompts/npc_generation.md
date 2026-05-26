@@ -52,7 +52,11 @@ Real people are not consistent. A generous man can be vain. A coward can be kind
 
 ### Step Six — The Body
 
-For Party tier, generate full physical statistics: STR, DEX, CON rolled alongside the mental triad, with a complete character sheet — class, level, skills, saving throws, features, equipment, spells, HP, AC, attacks. For Major tier combatants, generate physical stats and simplified combat capabilities. For non-combatants of any tier, the mental triad is sufficient.
+For Party tier, generate full physical statistics: STR, DEX, CON alongside the mental triad, with a complete character sheet — class, level, skills, saving throws, features, equipment, spells, HP, AC, attacks. For Major tier combatants, generate physical stats and simplified combat capabilities. For non-combatants of any tier, the mental triad is sufficient.
+
+You may assign ability scores deliberately or roll them using your dice. Assigned scores are appropriate when the NPC needs to fill a specific role — a party healer who cannot heal or a front line that crumbles on contact serves nobody. Rolled scores produce more organic characters and are appropriate when you want to discover who someone is rather than engineer them. The choice is yours, situation by situation.
+
+For Party tier builds, consult your rules database for racial traits, class features, and spell lists rather than working from memory. The canonical source is in your toolkit — use it. Training data gets these details subtly wrong, and a character sheet built on almost-right is worse than one built on guesswork, because the errors look plausible enough to go unquestioned.
 
 ### Step Seven — Integration
 
