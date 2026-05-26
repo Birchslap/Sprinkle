@@ -521,6 +521,20 @@ async def search_rules(
     return [dict(r) for r in rows]
 
 
+async def get_protocol(
+    pool: asyncpg.Pool,
+    name: str,
+) -> dict | None:
+    """Retrieve a DM protocol by name."""
+    row = await pool.fetchrow(
+        "SELECT name, title, content FROM dm_protocols WHERE name = $1",
+        name,
+    )
+    if not row:
+        return None
+    return dict(row)
+
+
 async def get_campaign_usage(
     pool: asyncpg.Pool,
     campaign_id: int,
