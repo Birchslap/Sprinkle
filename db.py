@@ -47,13 +47,7 @@ async def list_campaigns(pool: asyncpg.Pool) -> list[dict]:
     rows = await pool.fetch(
         "SELECT * FROM campaigns ORDER BY updated_at DESC"
     )
-    results = []
-    for r in rows:
-        d = dict(r)
-        if d.get("tool_data") and isinstance(d["tool_data"], str):
-            d["tool_data"] = json.loads(d["tool_data"])
-        results.append(d)
-    return results
+    return [dict(r) for r in rows]
 
 
 async def delete_campaign(pool: asyncpg.Pool, campaign_id: int) -> bool:
@@ -171,7 +165,13 @@ async def get_campaign_messages(
            LIMIT $2""",
         campaign_id, limit
     )
-    return [dict(r) for r in rows]
+    results = []
+    for r in rows:
+        d = dict(r)
+        if d.get("tool_data") and isinstance(d["tool_data"], str):
+            d["tool_data"] = json.loads(d["tool_data"])
+        results.append(d)
+    return results
 
 
 async def get_messages_by_turn(pool: asyncpg.Pool, session_id: int,
