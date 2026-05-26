@@ -20,7 +20,7 @@ def _load_prompt(filename: str) -> str:
 def build_system_prompt(campaign_name: str = "", setting: str = "",
                         character_doc: str | None = None) -> str:
     """Build the full system prompt, optionally with campaign context."""
-    parts = [_load_prompt("system_prompt.md")]
+    parts = [_load_prompt("system_prompt.md"), _load_prompt("technical_instructions.md")]
     if campaign_name or setting or character_doc:
         parts.append("\n\n# Current Campaign")
         if campaign_name:
