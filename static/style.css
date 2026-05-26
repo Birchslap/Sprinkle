@@ -150,6 +150,34 @@ body {
 }
 
 /* ================================================================
+   Atmospheric Margin
+   ================================================================ */
+
+#atmos-margin {
+    display: none; /* Reserved for future ambient visuals */
+}
+
+/* ================================================================
+   Content Area / Main View
+   ================================================================ */
+
+#content-area {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#main-view {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ================================================================
    Chat Window
    ================================================================ */
 
