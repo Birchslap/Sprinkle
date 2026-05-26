@@ -11,8 +11,8 @@
 // ============================================================
 
 const TYPEWRITER = {
-    bufferMs: 500,          // Initial buffer before text starts appearing
-    charMs: 30,             // Milliseconds per character during drip
+    bufferMs: 1500,         // Initial buffer before text starts appearing
+    charMs: 12,             // Milliseconds per character during drip
     cursorLingerMs: 600,    // How long the cursor stays after text finishes
 };
 
