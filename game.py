@@ -268,6 +268,56 @@ async def _stream_phase_one(
     result.declarations_raw = declarations_raw
 
 
+# -- Declarations Demand -----------------------------------------------------
+
+async def _demand_declarations(
+    state: GameState,
+    turn_id: int,
+) -> str | None:
+    """Demand a declarations block when the model didn't include one.
+
+    Sends a hidden system message requiring the model to emit a
+    [DECLARATIONS] block for its most recent narrative. The exchange
+    is transient — neither the demand nor the response is saved to
+    message history.
+
+    Returns the raw declarations text, or None if the model refuses.
+    """
+    demand_msg = (
+        "Your response has been delivered to the player. You did not include "
+        "a [DECLARATIONS] block. You must emit one now. List all new characters, "
+        "new locations, events, and developments from your last response. "
+        "Use the exact format:\n\n"
+        "[DECLARATIONS]\n"
+        "new_characters: name1, name2\n"
+        "new_locations: location1\n"
+        "events: what happened\n"
+        "developments: plans, secrets, threads\n"
+        "[/DECLARATIONS]\n\n"
+        "Respond with ONLY the declarations block. No narrative, no commentary. "
+        "Omit any category that has no items."
+    )
+
+    messages = await _build_messages(state)
+    messages.append({"role": "system", "content": demand_msg})
+
+    buffer = ""
+    async for event in stream_response(
+        state.client, messages, TOOL_DEFINITIONS, state.config.model
+    ):
+        if isinstance(event, ContentDelta):
+            buffer += event.text
+
+    _, declarations_raw = _split_declarations(buffer)
+
+    if declarations_raw:
+        log.info("Declarations obtained via demand")
+    else:
+        log.warning("Model failed to produce declarations even when demanded")
+
+    return declarations_raw
+
+
 # -- Phase 2: Compel Records -------------------------------------------------
 
 async def _execute_declarations(
@@ -472,6 +522,8 @@ async def process_turn(
 
     # -- Phase 2: Compel records from declarations ----------------------------
 
+    declarations = []
+
     if result.declarations_raw:
         declarations = _parse_declarations(result.declarations_raw)
         if declarations:
@@ -479,8 +531,24 @@ async def process_turn(
                 "Declarations captured: %s",
                 {d.category: d.items for d in declarations},
             )
-            await _execute_declarations(state, turn_id, declarations)
         else:
             log.warning("Declarations block present but could not be parsed")
+
+    if not declarations:
+        log.info("No declarations in response — demanding from model")
+        demanded_raw = await _demand_declarations(state, turn_id)
+        if demanded_raw:
+            declarations = _parse_declarations(demanded_raw)
+            if declarations:
+                log.info(
+                    "Demanded declarations captured: %s",
+                    {d.category: d.items for d in declarations},
+                )
+
+    if declarations:
+        await _execute_declarations(state, turn_id, declarations)
     else:
-        log.info("No declarations block in response")
+        log.error(
+            "Model failed to produce declarations for campaign=%s turn=%d",
+            state.campaign_id, turn_id,
+        )
