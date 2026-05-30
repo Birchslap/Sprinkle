@@ -460,13 +460,18 @@ stateTabs.forEach(tab => {
 // Text Size
 // ============================================================
 
-fontSizeSelect.addEventListener("change", () => {
-    const size = fontSizeSelect.value + "px";
-    chatWindow.style.fontSize = size;
-});
+const SIZE_CLASSES = { "15": "text-small", "17": "text-medium", "19": "text-large" };
+
+function applyTextSize(value) {
+    Object.values(SIZE_CLASSES).forEach(cls => chatWindow.classList.remove(cls));
+    const cls = SIZE_CLASSES[value];
+    if (cls) chatWindow.classList.add(cls);
+}
+
+fontSizeSelect.addEventListener("change", () => applyTextSize(fontSizeSelect.value));
 
 // Apply default on load.
-chatWindow.style.fontSize = fontSizeSelect.value + "px";
+applyTextSize(fontSizeSelect.value);
 
 // ============================================================
 // High Contrast
