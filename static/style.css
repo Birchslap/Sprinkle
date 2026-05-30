@@ -213,18 +213,15 @@ body {
 }
 
 /* DM narration — EB Garamond */
-.message-dm {
+.message.dm {
     color: #d4d4d4;
     font-family: 'EB Garamond', serif;
-}
-
-.message-dm .narrative-text {
     font-size: 19px;
     line-height: 1.75;
 }
 
 /* NPC dialogue — default: white Inter italic */
-.npc-dialogue {
+.dialogue {
     font-style: italic;
     font-family: 'Inter', sans-serif;
     font-size: 15px;
@@ -233,41 +230,38 @@ body {
 }
 
 /* NPC dialogue — high contrast: gold */
-.high-contrast .npc-dialogue {
+.high-contrast .dialogue {
     color: #bba87e;
 }
 
 /* Player messages — EB Garamond with mithril blue accent */
-.message-player {
+.message.player {
     font-family: 'EB Garamond', serif;
     color: #d4d4d4;
     padding-left: 16px;
     border-left: 2px solid #2a2a4a;
     transition: color 0.3s ease, border-color 0.3s ease;
-}
-
-.message-player .speaker {
-    color: #888;
-    transition: color 0.3s ease;
-}
-
-.message-player .player-text {
     font-size: 19px;
     line-height: 1.75;
 }
 
+.message.player .speaker {
+    color: #888;
+    transition: color 0.3s ease;
+}
+
 /* Player — high contrast: mithril blue */
-.high-contrast .message-player {
+.high-contrast .message.player {
     color: #8ac0da;
     border-left-color: #8ac0da44;
 }
 
-.high-contrast .message-player .speaker {
+.high-contrast .message.player .speaker {
     color: #8ac0da;
 }
 
 /* System messages */
-.message-system {
+.message.system {
     color: #666;
     font-style: italic;
     font-size: 13px;
@@ -702,30 +696,30 @@ body {
    Text Size Classes
    ================================================================ */
 
-.text-small .narrative-text,
-.text-small .player-text {
+.text-small .message.dm,
+.text-small .message.player {
     font-size: 15px;
 }
 
-.text-small .npc-dialogue {
+.text-small .dialogue {
     font-size: 12px;
 }
 
-.text-medium .narrative-text,
-.text-medium .player-text {
+.text-medium .message.dm,
+.text-medium .message.player {
     font-size: 17px;
 }
 
-.text-medium .npc-dialogue {
+.text-medium .dialogue {
     font-size: 14px;
 }
 
-.text-large .narrative-text,
-.text-large .player-text {
+.text-large .message.dm,
+.text-large .message.player {
     font-size: 19px;
 }
 
-.text-large .npc-dialogue {
+.text-large .dialogue {
     font-size: 15px;
 }
 
