@@ -52,6 +52,7 @@ async def stream_response(
         tools=tools if tools else None,
         max_tokens=config.max_tokens,
         temperature=config.temperature,
+        reasoning_effort=config.reasoning_effort,
         stream=True,
         stream_options={"include_usage": True},
     )
