@@ -27,6 +27,7 @@ class ModelConfig:
     base_url: str = "https://api.x.ai/v1"
     max_tokens: int = 4096
     temperature: float = 0.7
+    reasoning_effort: str = "high"
 
 
 @dataclass(frozen=True)
@@ -53,6 +54,7 @@ def load_config() -> AppConfig:
             model=os.environ.get("SPRINKLE_MODEL", "grok-4.3"),
             temperature=float(os.environ.get("SPRINKLE_TEMPERATURE", "0.7")),
             max_tokens=int(os.environ.get("SPRINKLE_MAX_TOKENS", "4096")),
+            reasoning_effort=os.environ.get("SPRINKLE_REASONING_EFFORT", "high"),
         ),
         database=DatabaseConfig(
             url=os.environ.get("DATABASE_URL", ""),
