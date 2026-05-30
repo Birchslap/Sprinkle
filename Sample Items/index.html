@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Storm</title>
+
+    <!-- Fonts: EB Garamond for narrative, Inter for UI -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ATMOSPHERIC MARGIN -->
+    <div id="atmos-margin">
+        <div id="atmos-brand">STORM</div>
+    </div>
+
+    <!-- LEFT PANEL: Chat -->
+    <div id="left-panel">
+        <!-- Top bar -->
+        <div id="top-bar">
+            <div id="top-bar-controls">
+                <!-- Font size -->
+                <div class="control-group">
+                    <span class="control-label">Size</span>
+                    <select class="control-select" id="font-size-select">
+                        <option value="15">Small</option>
+                        <option value="17">Medium</option>
+                        <option value="19" selected>Large</option>
+                    </select>
+                </div>
+
+                <!-- High contrast toggle -->
+                <div class="control-group">
+                    <span class="control-label">High Contrast</span>
+                    <div class="control-toggle" id="contrast-toggle"></div>
+                </div>
+
+                <!-- Model selector (dev tool) -->
+                <div class="control-group">
+                    <span class="control-label">Model</span>
+                    <select class="control-select" id="model-select"></select>
+                    <span id="model-status"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat tabs -->
+        <div id="chat-tabs">
+            <div class="chat-tab active" data-tab="ic">In Character</div>
+            <div class="chat-tab" data-tab="ooc">Out of Character</div>
+        </div>
+
+        <!-- Content area -->
+        <div id="content-area">
+
+            <!-- Main view (starts with chat) -->
+            <div id="main-view">
+                <div id="chat-window">
+                    <div class="welcome-scene">
+                        <div class="message system">Session begins. The Thornwood, late autumn. Dusk.</div>
+
+                        <div class="message narrative"><div class="speaker-label label-storm">Storm</div>The road narrows to a thread of packed earth between the oaks, their bare branches scratching at a sky the colour of old iron. You have been walking since morning, and the light is nearly spent. Ahead, through the last thinning trees, you see firelight — a village, small and close-walled, huddled at the edge of the wood as though it grew there by accident and never found reason to leave.</div>
+
+                        <div class="message narrative"><div class="speaker-label label-storm">Storm</div>A sign at the road's edge reads <em>Ashwick</em> in faded letters. Beneath it, someone has nailed a strip of cloth — white, or once white — the local sign for welcome, or at least tolerance.</div>
+
+                        <div class="message player"><div class="speaker-label label-player">Anduin</div>I pull my cloak tighter and head for the largest building with a light on. Probably the tavern.</div>
+
+                        <div class="message narrative"><div class="speaker-label label-storm">Storm</div>It is the tavern — the Blind Crow, if the painted sign above the door is to be believed. The crow in question looks more startled than blind, but the warmth pouring through the cracked-open door is genuine. Inside, a low fire, a half-dozen locals nursing their cups, and a woman behind the bar who watches you enter with the careful disinterest of someone who has seen trouble walk through that door before.</div>
+
+                        <div class="message narrative"><div class="speaker-label label-storm">Storm</div>She looks you over, unhurried. <span class="dialogue-npc">"Traveller. Kitchen's closed, but I've got bread and cold mutton if your coin's good. Room upstairs if you need one."</span> She sets a cup on the bar without being asked. <span class="dialogue-npc">"Ale's a copper. The good stuff's two."</span></div>
+
+                        <div class="message player"><div class="speaker-label label-player">Anduin</div>I put two coppers on the bar. <span class="dialogue-player">"The good stuff, then. And whatever news you're willing to part with."</span></div>
+
+                        <div class="message narrative"><div class="speaker-label label-storm">Storm</div><span class="dialogue-npc">"News."</span> She pours something dark and surprisingly fragrant. <span class="dialogue-npc">"The Alderman's daughter hasn't come home in three days. Search party went into the wood yesterday. They haven't come home either. That's the news."</span> She slides the cup across. <span class="dialogue-npc">"Drink up. You look like you've earned it."</span></div>
+                    </div>
+                </div>
+            </div><!-- /main-view -->
+
+        </div><!-- /content-area -->
+
+        <!-- Input -->
+        <div id="input-area">
+            <input type="text" id="player-input" placeholder="What do you do?" autocomplete="off">
+            <button id="send-btn">Send</button>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: Game State -->
+    <div id="right-panel">
+        <div id="state-tabs">
+            <div class="state-tab active" data-page="map">Map</div>
+            <div class="state-tab" data-page="character">Character</div>
+            <div class="state-tab" data-page="party">Party</div>
+            <div class="state-tab" data-page="inventory">Inventory</div>
+            <div class="state-tab" data-page="notes">Notes</div>
+        </div>
+        <div id="state-content">
+            <div class="state-page active" id="page-map">
+                <div class="map-controls">
+                    <button class="map-btn" id="swap-views" title="Swap map and chat">⇄ Expand</button>
+                    <button class="map-btn" id="popout-map" title="Open in new window">⧉ Popout</button>
+                </div>
+                <div id="map-container">
+                    <canvas id="map-canvas"></canvas>
+                    <span id="map-placeholder">Map will render here</span>
+                </div>
+            </div>
+            <div class="state-page" id="page-character">
+                <p class="placeholder-text">Character sheet will display here.</p>
+            </div>
+            <div class="state-page" id="page-party">
+                <p class="placeholder-text">Party information will display here.</p>
+            </div>
+            <div class="state-page" id="page-inventory">
+                <p class="placeholder-text">Gold and equipment will display here.</p>
+            </div>
+            <div class="state-page" id="page-notes">
+                <div id="notes-list"></div>
+                <div id="note-input-area">
+                    <input type="text" id="note-input" placeholder="Add a note..." autocomplete="off">
+                    <button id="note-add-btn">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="storm.js"></script>
+</body>
+</html>
