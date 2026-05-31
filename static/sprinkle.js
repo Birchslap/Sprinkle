@@ -623,7 +623,7 @@ popoutMapBtn.addEventListener("click", () => {
             const mc = document.getElementById('map-container');
             const img = mc.querySelector('img');
             let zoom = 100;
-            const ZOOM_MIN = 50, ZOOM_MAX = 250, ZOOM_STEP = 25;
+            const ZOOM_MIN = 100, ZOOM_MAX = 250, ZOOM_STEP = 25;
 
             if (mc && img) {
                 mc.addEventListener('wheel', (e) => {
@@ -679,7 +679,7 @@ popoutMapBtn.addEventListener("click", () => {
 const mapContainer = document.getElementById("map-container");
 const mapImage = document.getElementById("map-image");
 let mapZoom = 100;
-const MAP_ZOOM_MIN = 50;
+const MAP_ZOOM_MIN = 100;
 const MAP_ZOOM_MAX = 250;
 const MAP_ZOOM_STEP = 25;
 
