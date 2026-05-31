@@ -471,12 +471,37 @@ chatTabs.forEach(tab => {
 
 stateTabs.forEach(tab => {
     tab.addEventListener("click", () => {
+        const targetPage = tab.dataset.page;
+
+        // Update active tab styling
         stateTabs.forEach(t => t.classList.remove("active"));
         tab.classList.add("active");
 
-        const page = tab.dataset.page;
-        document.querySelectorAll(".state-page").forEach(p => p.classList.remove("active"));
-        document.getElementById(`page-${page}`).classList.add("active");
+        if (mapInMain) {
+            // Map is expanded — right panel holds chat + tab content
+            // Hide all state pages in right panel
+            document.querySelectorAll("#state-content .state-page").forEach(p => {
+                p.classList.remove("active");
+                p.style.display = "none";
+            });
+
+            if (targetPage === "map") {
+                // Show chat log, hide other content
+                chatWindow.style.display = "";
+            } else {
+                // Hide chat log, show selected tab
+                chatWindow.style.display = "none";
+                const page = document.getElementById("page-" + targetPage);
+                if (page) {
+                    page.classList.add("active");
+                    page.style.display = "block";
+                }
+            }
+        } else {
+            // Normal mode — standard tab switching
+            document.querySelectorAll(".state-page").forEach(p => p.classList.remove("active"));
+            document.getElementById("page-" + targetPage).classList.add("active");
+        }
     });
 });
 
@@ -515,21 +540,45 @@ const swapViewsBtn = document.getElementById("swap-views");
 const popoutMapBtn = document.getElementById("popout-map");
 const leftPanel = document.getElementById("left-panel");
 const rightPanel = document.getElementById("right-panel");
-let mapExpanded = false;
+let mapInMain = false;
 let mapWindow = null;
 
 swapViewsBtn.addEventListener("click", () => {
-    mapExpanded = !mapExpanded;
-    document.body.classList.toggle("map-expanded", mapExpanded);
+    const mainView = document.getElementById("main-view");
+    const stateContent = document.getElementById("state-content");
+    const mapPage = document.getElementById("page-map");
 
-    const panels = document.getElementById("panels");
-    if (mapExpanded) {
-        panels.insertBefore(rightPanel, leftPanel);
+    if (!mapInMain) {
+        // Move map page to main view, chat to right panel
+        mainView.insertBefore(mapPage, mainView.firstChild);
+        mapPage.classList.add("active");
+        mapPage.style.display = "flex";
+        mapPage.style.flexDirection = "column";
+        mapPage.style.flex = "1";
+        stateContent.insertBefore(chatWindow, stateContent.firstChild);
+        chatWindow.style.flex = "1";
+        swapViewsBtn.textContent = "⇄ Collapse";
+        mapInMain = true;
     } else {
-        panels.insertBefore(leftPanel, rightPanel);
+        // Move chat back to main, map back to right panel tab
+        mainView.insertBefore(chatWindow, mainView.firstChild);
+        chatWindow.style.flex = "";
+        chatWindow.style.display = "";
+        stateContent.insertBefore(mapPage, stateContent.firstChild);
+        mapPage.style.display = "";
+        mapPage.style.flexDirection = "";
+        mapPage.style.flex = "";
+        swapViewsBtn.textContent = "⇄ Expand";
+        mapInMain = false;
+        // Re-activate map tab view, reset all page displays
+        document.querySelectorAll(".state-page").forEach(p => {
+            p.classList.remove("active");
+            p.style.display = "";
+        });
+        mapPage.classList.add("active");
     }
 
-    swapViewsBtn.textContent = mapExpanded ? "⇄ Collapse" : "⇄ Expand";
+    chatWindow.scrollTop = chatWindow.scrollHeight;
 });
 
 popoutMapBtn.addEventListener("click", () => {
