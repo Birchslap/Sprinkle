@@ -508,6 +508,63 @@ contrastToggle.addEventListener("click", () => {
 });
 
 // ============================================================
+// Map Controls
+// ============================================================
+
+const swapViewsBtn = document.getElementById("swap-views");
+const popoutMapBtn = document.getElementById("popout-map");
+const leftPanel = document.getElementById("left-panel");
+const rightPanel = document.getElementById("right-panel");
+let mapExpanded = false;
+let mapWindow = null;
+
+swapViewsBtn.addEventListener("click", () => {
+    mapExpanded = !mapExpanded;
+    document.body.classList.toggle("map-expanded", mapExpanded);
+    swapViewsBtn.textContent = mapExpanded ? "⇄ Collapse" : "⇄ Expand";
+});
+
+popoutMapBtn.addEventListener("click", () => {
+    if (mapWindow && !mapWindow.closed) {
+        mapWindow.focus();
+        return;
+    }
+
+    const mapContainer = document.getElementById("map-container");
+    const mapContent = mapContainer.innerHTML;
+
+    mapWindow = window.open("", "SprinkleMap", "width=900,height=700");
+    mapWindow.document.write(`
+        <!DOCTYPE html>
+        <html><head>
+        <title>Sprinkle — Map</title>
+        <style>
+            body {
+                margin: 0; padding: 0;
+                background: #0e0e16;
+                display: flex; align-items: center; justify-content: center;
+                height: 100vh; overflow: hidden;
+            }
+            #map-container {
+                width: 100%; height: 100%;
+                display: flex; align-items: center; justify-content: center;
+            }
+            #map-container img {
+                max-width: 100%; max-height: 100%; object-fit: contain;
+            }
+            #map-placeholder {
+                color: #555; font-family: Inter, sans-serif; font-size: 14px;
+            }
+            canvas { width: 100%; height: 100%; }
+        </style>
+        </head><body>
+        <div id="map-container">${mapContent}</div>
+        </body></html>
+    `);
+    mapWindow.document.close();
+});
+
+// ============================================================
 // Notes (local player notes)
 // ============================================================
 
