@@ -627,8 +627,9 @@ body.high-contrast .speaker-label.label-player {
 
 #map-image {
     display: block;
-    max-width: none;
+    width: 100%;
     height: auto;
+    object-fit: contain;
     user-select: none;
     -webkit-user-drag: none;
 }
