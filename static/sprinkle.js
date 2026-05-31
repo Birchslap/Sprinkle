@@ -257,8 +257,11 @@ function renderHistoryMessage(role, content) {
         appendPlayerMessage(content);
     } else if (role === "assistant") {
         const div = createMessageBlock("dm");
-        div.textContent = content;
-        div.innerHTML = highlightDialogue(div.innerHTML);
+        const container = document.createElement("div");
+        container.className = "message-text";
+        container.textContent = content;
+        container.innerHTML = highlightDialogue(container.innerHTML);
+        div.appendChild(container);
         div.classList.remove("typing");
     }
 }
@@ -325,8 +328,10 @@ function finaliseDmBlock() {
     if (!currentDmBlock) return;
 
     // Process the completed text for dialogue highlighting.
-    const raw = currentDmBlock.innerHTML;
-    currentDmBlock.innerHTML = highlightDialogue(raw);
+    const container = currentDmBlock.querySelector(".message-text");
+    if (container) {
+        container.innerHTML = highlightDialogue(container.innerHTML);
+    }
     currentDmBlock.classList.remove("typing");
     currentDmBlock = null;
     scrollToBottom();
@@ -336,10 +341,19 @@ function finaliseDmBlock() {
 function appendCharToBlock(char) {
     if (!currentDmBlock) return;
 
+    // Append to a text container, not directly to the block
+    // (speaker label is the first child).
+    let container = currentDmBlock.querySelector(".message-text");
+    if (!container) {
+        container = document.createElement("div");
+        container.className = "message-text";
+        currentDmBlock.appendChild(container);
+    }
+
     if (char === "\n") {
-        currentDmBlock.appendChild(document.createElement("br"));
+        container.appendChild(document.createElement("br"));
     } else {
-        currentDmBlock.appendChild(document.createTextNode(char));
+        container.appendChild(document.createTextNode(char));
     }
     scrollToBottom();
 }
@@ -353,7 +367,7 @@ function highlightDialogue(html) {
     // Handles "straight quotes" and \u201C\u201D curly quotes.
     return html.replace(
         /(["\u201C])([^"\u201D]*?)(["\u201D])/g,
-        '<span class="dialogue">\u201C$2\u201D</span>'
+        '<span class="dialogue dialogue-npc">\u201C$2\u201D</span>'
     );
 }
 
@@ -364,8 +378,15 @@ function highlightDialogue(html) {
 function createMessageBlock(role) {
     const div = document.createElement("div");
     div.className = `message ${role}`;
+
+    // Speaker label.
+    const label = document.createElement("div");
+    label.className = `speaker-label label-${role}`;
+    label.textContent = role === "dm" ? "Sprinkle" : "Player";
+    div.appendChild(label);
+
     if (role === "dm") {
-        div.classList.add("typing"); // Shows cursor during typewriter.
+        div.classList.add("typing"); // Shows cursor via CSS ::after.
     }
     chatWindow.appendChild(div);
     scrollToBottom();
@@ -374,7 +395,10 @@ function createMessageBlock(role) {
 
 function appendPlayerMessage(text) {
     const div = createMessageBlock("player");
-    div.textContent = text;
+    const container = document.createElement("div");
+    container.className = "message-text";
+    container.textContent = text;
+    div.appendChild(container);
     return div;
 }
 
