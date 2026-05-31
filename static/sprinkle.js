@@ -599,23 +599,74 @@ popoutMapBtn.addEventListener("click", () => {
             body {
                 margin: 0; padding: 0;
                 background: #0e0e16;
-                display: flex; align-items: center; justify-content: center;
                 height: 100vh; overflow: hidden;
             }
             #map-container {
                 width: 100%; height: 100%;
-                display: flex; align-items: center; justify-content: center;
+                overflow: auto;
+                cursor: grab;
             }
             #map-container img {
-                max-width: 100%; max-height: 100%; object-fit: contain;
+                width: 100%;
+                height: auto;
+                display: block;
+                user-select: none;
+                -webkit-user-drag: none;
             }
             #map-placeholder {
                 color: #555; font-family: Inter, sans-serif; font-size: 14px;
             }
-            canvas { width: 100%; height: 100%; }
         </style>
         </head><body>
         <div id="map-container">${mapContent}</div>
+        <script>
+            const mc = document.getElementById('map-container');
+            const img = mc.querySelector('img');
+            let zoom = 100;
+            const ZOOM_MIN = 50, ZOOM_MAX = 250, ZOOM_STEP = 25;
+
+            if (mc && img) {
+                mc.addEventListener('wheel', (e) => {
+                    e.preventDefault();
+                    const oldZoom = zoom;
+                    zoom = e.deltaY < 0
+                        ? Math.min(ZOOM_MAX, zoom + ZOOM_STEP)
+                        : Math.max(ZOOM_MIN, zoom - ZOOM_STEP);
+                    if (zoom === oldZoom) return;
+                    const rect = mc.getBoundingClientRect();
+                    const cx = e.clientX - rect.left;
+                    const cy = e.clientY - rect.top;
+                    const sx = mc.scrollLeft + cx;
+                    const sy = mc.scrollTop + cy;
+                    const rx = sx / (img.offsetWidth || 1);
+                    const ry = sy / (img.offsetHeight || 1);
+                    img.style.width = zoom + '%';
+                    requestAnimationFrame(() => {
+                        mc.scrollLeft = rx * img.offsetWidth - cx;
+                        mc.scrollTop = ry * img.offsetHeight - cy;
+                    });
+                }, { passive: false });
+
+                let panning = false, px = 0, py = 0, slx = 0, sly = 0;
+                mc.addEventListener('mousedown', (e) => {
+                    if (e.button !== 0) return;
+                    panning = true; px = e.clientX; py = e.clientY;
+                    slx = mc.scrollLeft; sly = mc.scrollTop;
+                    mc.style.cursor = 'grabbing';
+                    e.preventDefault();
+                });
+                document.addEventListener('mousemove', (e) => {
+                    if (!panning) return;
+                    mc.scrollLeft = slx - (e.clientX - px);
+                    mc.scrollTop = sly - (e.clientY - py);
+                });
+                document.addEventListener('mouseup', () => {
+                    if (!panning) return;
+                    panning = false;
+                    mc.style.cursor = 'grab';
+                });
+            }
+        <\/script>
         </body></html>
     `);
     mapWindow.document.close();
