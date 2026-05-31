@@ -521,6 +521,14 @@ let mapWindow = null;
 swapViewsBtn.addEventListener("click", () => {
     mapExpanded = !mapExpanded;
     document.body.classList.toggle("map-expanded", mapExpanded);
+
+    const panels = document.getElementById("panels");
+    if (mapExpanded) {
+        panels.insertBefore(rightPanel, leftPanel);
+    } else {
+        panels.insertBefore(leftPanel, rightPanel);
+    }
+
     swapViewsBtn.textContent = mapExpanded ? "⇄ Collapse" : "⇄ Expand";
 });
 
