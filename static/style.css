@@ -947,23 +947,17 @@ body.high-contrast .speaker-label.label-player {
 }
 
 /* ================================================================
-   Map Expanded — Swap layout proportions
+   Map in Main View — content-swap styles
    ================================================================ */
 
-body.map-expanded #left-panel {
+#main-view > #page-map {
     flex: 1;
-    min-width: 360px;
-    max-width: 500px;
+    display: flex;
+    flex-direction: column;
 }
 
-body.map-expanded #right-panel {
-    flex: 3;
-    min-width: 0;
-    max-width: none;
-}
-
-body.map-expanded #map-container {
-    min-height: 500px;
+#main-view > #page-map #map-container {
+    min-height: 400px;
 }
 
 /* ================================================================
