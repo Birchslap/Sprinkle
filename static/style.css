@@ -941,12 +941,14 @@ body.map-expanded #left-panel {
     flex: 1;
     min-width: 360px;
     max-width: 500px;
+    order: 2;
 }
 
 body.map-expanded #right-panel {
     flex: 3;
     min-width: 0;
     max-width: none;
+    order: 1;
 }
 
 body.map-expanded #map-container {
