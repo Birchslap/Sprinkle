@@ -4,25 +4,188 @@
    ================================================================ */
 
 /* --- Fonts --- */
-@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:ital,wght@0,400;0,500;0,600;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap');
 
-/* --- Reset --- */
+/* ================================================================
+   CSS Custom Properties
+   ================================================================ */
+
+:root {
+    /* Surfaces */
+    --surface-deep: #080810;
+    --surface-base: #0e0e16;
+    --surface-raised: #12121a;
+    --surface-overlay: #1a1a25;
+
+    /* Borders */
+    --border-subtle: #1e1e2a;
+    --border-default: #2a2a35;
+
+    /* Text — Default Mode */
+    --text-narration: #e8e8e8;
+    --text-muted: #666;
+    --text-faint: #444;
+
+    /* Text — High Contrast Mode */
+    --hc-narration: #ffffff;
+    --hc-npc: #bba87e;
+    --hc-player: #94c0d4;
+
+    /* Accent — British Racing Green */
+    --accent-primary: #2a5a3a;
+    --accent-hover: #1e4a2e;
+    --accent-glow: rgba(42, 90, 58, 0.15);
+
+    /* Typography */
+    --font-narrative: 'EB Garamond', Georgia, 'Times New Roman', serif;
+    --font-ui: 'Inter', 'Segoe UI', system-ui, sans-serif;
+
+    /* Font sizes — Large default */
+    --size-narrative: 19px;
+    --size-ui-body: 14px;
+    --size-ui-small: 12px;
+    --size-ui-label: 11px;
+    --size-input: 17px;
+
+    /* Spacing */
+    --line-height-narrative: 1.7;
+    --line-height-ui: 1.4;
+    --message-gap: 18px;
+    --chat-padding-x: 36px;
+    --chat-padding-y: 24px;
+}
+
+/* ================================================================
+   Reset and Base
+   ================================================================ */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
 }
 
-/* --- Base --- */
 body {
-    background: #1a1a2e;
-    color: #e0e0e0;
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    line-height: 1.6;
+    background: var(--surface-deep);
+    color: var(--text-narration);
+    font-family: var(--font-ui);
+    font-size: var(--size-ui-body);
+    line-height: var(--line-height-ui);
     height: 100vh;
     display: flex;
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* ================================================================
+   High Contrast Mode
+   ================================================================ */
+
+body.high-contrast .message.dm {
+    color: var(--hc-narration);
+}
+
+body.high-contrast .dialogue {
+    color: var(--hc-npc);
+}
+
+body.high-contrast .dialogue-npc {
+    color: var(--hc-npc);
+}
+
+body.high-contrast .dialogue-player {
+    color: var(--hc-player);
+}
+
+body.high-contrast .message.player {
+    color: var(--hc-player);
+    border-left-color: rgba(148, 192, 212, 0.25);
+}
+
+body.high-contrast .message.player .speaker {
+    color: var(--hc-player);
+}
+
+body.high-contrast .speaker-label.label-dm {
+    color: var(--hc-narration);
+}
+
+body.high-contrast .speaker-label.label-player {
+    color: var(--hc-player);
+}
+
+/* ================================================================
+   Atmospheric Left Margin
+   ================================================================ */
+
+#atmos-margin {
+    width: 72px;
+    min-width: 72px;
+    background: var(--surface-base);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Layered texture — stone/fabric feel */
+#atmos-margin::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+        repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 2px,
+            rgba(42, 90, 58, 0.03) 2px,
+            rgba(42, 90, 58, 0.03) 3px
+        ),
+        repeating-linear-gradient(
+            -45deg,
+            transparent,
+            transparent 2px,
+            rgba(187, 168, 126, 0.02) 2px,
+            rgba(187, 168, 126, 0.02) 3px
+        );
+}
+
+/* Subtle vertical thread of light */
+#atmos-margin::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 3px;
+    border-radius: 1px;
+    background: linear-gradient(
+        to bottom,
+        transparent 0%,
+        rgba(42, 90, 58, 0.25) 15%,
+        rgba(42, 90, 58, 0.15) 40%,
+        rgba(42, 90, 58, 0.20) 65%,
+        rgba(42, 90, 58, 0.12) 85%,
+        transparent 100%
+    );
+}
+
+/* Brand text — vertical, bottom-to-top */
+#atmos-brand {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(180deg);
+    writing-mode: vertical-rl;
+    font-family: var(--font-ui);
+    font-size: 38px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 19px;
+    color: var(--accent-primary);
+    opacity: 0.6;
+    z-index: 2;
+    margin-left: -1.5px;
+    padding-top: 19px;
 }
 
 /* ================================================================
@@ -33,16 +196,16 @@ body {
     flex: 3;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #2a2a4a;
-    min-height: 0;
+    min-width: 0;
 }
 
 #right-panel {
     flex: 1;
-    min-width: 320px;
-    max-width: 420px;
+    min-width: 360px;
+    max-width: 500px;
     display: flex;
     flex-direction: column;
+    background: var(--surface-base);
 }
 
 /* ================================================================
@@ -52,29 +215,13 @@ body {
 #top-bar {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 8px 20px;
-    background: #16162b;
-    border-bottom: 1px solid #2a2a4a;
+    justify-content: flex-start;
+    padding: 10px 24px;
+    gap: 24px;
+    background: var(--surface-raised);
 }
 
-#top-bar .title {
-    font-size: 14px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-    color: #b48ead;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
-}
-
-#top-bar .campaign-name {
-    font-size: 13px;
-    color: #888;
-    font-family: 'Inter', sans-serif;
-}
-
-/* --- Controls row --- */
-.controls {
+#top-bar-controls {
     display: flex;
     align-items: center;
     gap: 16px;
@@ -83,39 +230,62 @@ body {
 .control-group {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
 }
 
-.control-group label {
-    color: #666;
-    font-size: 11px;
+.control-label {
+    font-size: var(--size-ui-label);
+    color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: 1px;
-    font-family: 'Inter', sans-serif;
 }
 
-.ctrl-btn {
-    background: #16162b;
-    color: #a0a0a0;
-    border: 1px solid #2a2a4a;
-    border-radius: 4px;
-    padding: 4px 12px;
+.control-select {
+    background: var(--surface-overlay);
+    border: 1px solid var(--border-default);
+    color: var(--text-narration);
+    padding: 4px 8px;
+    font-size: var(--size-ui-small);
+    font-family: var(--font-ui);
+    border-radius: 3px;
+    outline: none;
     cursor: pointer;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    transition: all 0.2s ease;
 }
 
-.ctrl-btn:hover {
-    border-color: #b48ead;
-    color: #d4d4d4;
+.control-select:focus {
+    border-color: var(--accent-primary);
 }
 
-.ctrl-btn.active {
-    background: #b48ead;
-    border-color: #b48ead;
-    color: #1a1a2e;
-    font-weight: 600;
+.control-toggle {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    background: var(--surface-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.control-toggle.active {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+}
+
+.control-toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: var(--text-narration);
+    border-radius: 50%;
+    transition: transform 0.2s;
+}
+
+.control-toggle.active::after {
+    transform: translateX(16px);
 }
 
 /* ================================================================
@@ -124,37 +294,29 @@ body {
 
 #chat-tabs {
     display: flex;
-    background: #16162b;
-    border-bottom: 1px solid #2a2a4a;
+    background: var(--surface-raised);
 }
 
 .chat-tab {
     padding: 10px 24px;
     cursor: pointer;
-    color: #666;
+    color: var(--text-muted);
     border-bottom: 2px solid transparent;
-    font-size: 13px;
+    font-family: var(--font-ui);
+    font-size: var(--size-ui-small);
+    font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 1px;
-    font-family: 'Inter', sans-serif;
-    transition: color 0.2s ease;
+    transition: color 0.2s, border-color 0.2s;
 }
 
 .chat-tab:hover {
-    color: #a0a0a0;
+    color: var(--text-narration);
 }
 
 .chat-tab.active {
-    color: #d4d4d4;
-    border-bottom: 2px solid #b48ead;
-}
-
-/* ================================================================
-   Atmospheric Margin
-   ================================================================ */
-
-#atmos-margin {
-    display: none; /* Reserved for future ambient visuals */
+    color: var(--text-narration);
+    border-bottom-color: var(--accent-primary);
 }
 
 /* ================================================================
@@ -163,18 +325,16 @@ body {
 
 #content-area {
     flex: 1;
-    min-height: 0;
     display: flex;
-    flex-direction: column;
+    gap: 0;
     overflow: hidden;
 }
 
 #main-view {
     flex: 1;
-    min-height: 0;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
+    min-width: 0;
 }
 
 /* ================================================================
@@ -184,98 +344,111 @@ body {
 #chat-window {
     flex: 1;
     overflow-y: auto;
-    padding: 24px 32px;
-    background: #0d0d1a;
-    min-height: 0;
+    padding: var(--chat-padding-y) var(--chat-padding-x);
+    background: var(--surface-deep);
+}
+
+/* When chat is in compact mode (swapped into right panel) */
+#right-panel #chat-window {
+    padding: 12px 16px;
+}
+
+#right-panel .message {
+    font-size: calc(var(--size-narrative) - 3px);
+    max-width: 100%;
+}
+
+#right-panel .speaker-label {
+    font-size: 10px;
 }
 
 /* --- Messages --- */
 .message {
-    margin-bottom: 20px;
-    line-height: 1.7;
-    max-width: 90%;
+    margin-bottom: var(--message-gap);
+    max-width: 85%;
+    font-family: var(--font-narrative);
+    font-size: var(--size-narrative);
+    line-height: var(--line-height-narrative);
 }
 
 .message:last-child {
     margin-bottom: 0;
 }
 
-/* Speaker labels */
+/* Speaker labels — legacy .speaker class */
 .message .speaker {
-    color: #b48ead;
+    color: var(--accent-primary);
     font-weight: 600;
-    font-size: 13px;
-    font-family: 'Inter', sans-serif;
+    font-size: var(--size-ui-small);
+    font-family: var(--font-ui);
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 1.5px;
     display: block;
     margin-bottom: 6px;
 }
 
-/* DM narration — EB Garamond */
-.message.dm {
-    color: #d4d4d4;
-    font-family: 'EB Garamond', serif;
-    font-size: 19px;
-    line-height: 1.75;
+/* Speaker labels — Storm-style classes */
+.speaker-label {
+    font-family: var(--font-ui);
+    font-size: var(--size-ui-small);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
+    color: var(--text-muted);
 }
 
-/* NPC dialogue — default: white Inter italic */
-.dialogue {
+/* DM narration — EB Garamond */
+.message.dm {
+    color: var(--text-narration);
+}
+
+/* NPC dialogue — default: italic Inter, same colour as narration */
+.dialogue,
+.dialogue-npc {
     font-style: italic;
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    color: #d4d4d4;
+    font-family: var(--font-ui);
+    font-weight: 400;
+    font-size: calc(var(--size-narrative) * 0.92);
     transition: color 0.3s ease;
 }
 
-/* NPC dialogue — high contrast: gold */
-.high-contrast .dialogue {
-    color: #bba87e;
+/* Player dialogue spans */
+.dialogue-player {
+    font-size: var(--size-narrative);
+    transition: color 0.3s ease;
 }
 
-/* Player messages — EB Garamond with mithril blue accent */
+/* Player messages */
 .message.player {
-    font-family: 'EB Garamond', serif;
-    color: #d4d4d4;
-    padding-left: 16px;
-    border-left: 2px solid #2a2a4a;
-    transition: color 0.3s ease, border-color 0.3s ease;
-    font-size: 19px;
-    line-height: 1.75;
+    color: var(--text-narration);
+    padding-left: 14px;
+    border-left: 2px solid var(--accent-primary);
 }
 
 .message.player .speaker {
-    color: #888;
-    transition: color 0.3s ease;
-}
-
-/* Player — high contrast: mithril blue */
-.high-contrast .message.player {
-    color: #8ac0da;
-    border-left-color: #8ac0da44;
-}
-
-.high-contrast .message.player .speaker {
-    color: #8ac0da;
+    color: var(--text-muted);
 }
 
 /* System messages */
 .message.system {
-    color: #666;
+    color: var(--text-muted);
+    font-family: var(--font-ui);
     font-style: italic;
-    font-size: 13px;
-    font-family: 'Inter', sans-serif;
+    font-size: var(--size-ui-body);
+    line-height: var(--line-height-ui);
+    max-width: 100%;
 }
 
-/* --- Mechanical results --- */
+/* Mechanical results */
 .mechanical {
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    color: #666;
-    background: #12122a;
-    padding: 8px 12px;
+    font-family: var(--font-ui);
+    font-size: var(--size-ui-small);
+    color: var(--text-muted);
+    background: var(--surface-base);
+    border: 1px solid var(--border-subtle);
     border-radius: 4px;
+    padding: 8px 12px;
     margin-top: 8px;
     display: inline-block;
 }
@@ -293,11 +466,12 @@ body {
 }
 
 /* --- Typewriter cursor --- */
-.typewriter-cursor {
+.message.dm.typing::after {
+    content: '';
     display: inline-block;
     width: 2px;
     height: 1em;
-    background: #b48ead;
+    background: var(--accent-primary);
     margin-left: 2px;
     vertical-align: text-bottom;
     animation: blink 0.8s step-end infinite;
@@ -315,52 +489,54 @@ body {
 #input-area {
     display: flex;
     padding: 12px 20px;
-    background: #16162b;
-    border-top: 1px solid #2a2a4a;
+    background: var(--surface-raised);
+    gap: 10px;
 }
 
 #player-input {
     flex: 1;
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
-    color: #d4d4d4;
+    background: var(--surface-overlay);
+    border: 1px solid var(--border-default);
+    color: var(--text-narration);
     padding: 12px 16px;
-    font-size: 16px;
-    font-family: 'EB Garamond', serif;
+    font-size: var(--size-input);
+    font-family: var(--font-narrative);
     border-radius: 4px;
     outline: none;
-    transition: border-color 0.2s ease;
+    transition: border-color 0.2s;
 }
 
 #player-input:focus {
-    border-color: #b48ead;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
 #player-input::placeholder {
-    color: #555;
+    color: var(--text-faint);
     font-style: italic;
 }
 
 #send-btn {
-    margin-left: 10px;
     padding: 12px 24px;
-    background: #b48ead;
-    color: #1a1a2e;
+    background: var(--accent-primary);
+    color: #fff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
-    font-family: 'Inter', sans-serif;
-    font-weight: 600;
-    transition: background 0.2s ease;
+    font-family: var(--font-ui);
+    font-size: var(--size-ui-body);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: background 0.2s;
 }
 
 #send-btn:hover {
-    background: #c9a0c1;
+    background: var(--accent-hover);
 }
 
 #send-btn:disabled {
-    background: #555;
+    background: #333;
     cursor: not-allowed;
 }
 
@@ -370,38 +546,38 @@ body {
 
 #state-tabs {
     display: flex;
-    background: #16162b;
-    border-bottom: 1px solid #2a2a4a;
+    background: var(--surface-raised);
 }
 
 .state-tab {
     flex: 1;
     padding: 10px 8px;
     cursor: pointer;
-    color: #666;
+    color: var(--text-muted);
     border-bottom: 2px solid transparent;
-    font-size: 12px;
+    font-family: var(--font-ui);
+    font-size: var(--size-ui-small);
+    font-weight: 500;
     text-transform: uppercase;
     letter-spacing: 1px;
     text-align: center;
-    font-family: 'Inter', sans-serif;
-    transition: color 0.2s ease;
+    transition: color 0.2s, border-color 0.2s;
 }
 
 .state-tab:hover {
-    color: #a0a0a0;
+    color: var(--text-narration);
 }
 
 .state-tab.active {
-    color: #d4d4d4;
-    border-bottom: 2px solid #b48ead;
+    color: var(--text-narration);
+    border-bottom-color: var(--accent-primary);
 }
 
 #state-content {
     flex: 1;
     overflow-y: auto;
     padding: 16px;
-    background: #0e0e18;
+    background: var(--surface-base);
 }
 
 .state-page {
@@ -413,28 +589,89 @@ body {
 }
 
 .placeholder-text {
-    color: #444;
+    color: var(--text-faint);
+    font-family: var(--font-ui);
     font-style: italic;
-    font-size: 13px;
-    font-family: 'Inter', sans-serif;
+    font-size: var(--size-ui-body);
 }
 
-/* --- Notes tab --- */
+/* ================================================================
+   Map Panel
+   ================================================================ */
+
+#map-container {
+    flex: 1;
+    position: relative;
+    background: var(--surface-deep);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    min-height: 300px;
+}
+
+#map-canvas {
+    display: block;
+}
+
+#map-placeholder {
+    color: var(--text-faint);
+    font-family: var(--font-ui);
+    font-style: italic;
+    font-size: var(--size-ui-body);
+}
+
+.map-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 8px 12px;
+    gap: 4px;
+    background: var(--surface-raised);
+}
+
+.map-btn {
+    background: none;
+    border: 1px solid var(--border-default);
+    color: var(--text-muted);
+    padding: 4px 10px;
+    font-family: var(--font-ui);
+    font-size: var(--size-ui-label);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+
+.map-btn:hover {
+    color: var(--text-narration);
+    border-color: var(--accent-primary);
+}
+
+/* ================================================================
+   Notes Tab
+   ================================================================ */
+
 .note-entry {
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
+    background: var(--surface-overlay);
+    border: 1px solid var(--border-default);
     border-radius: 4px;
     padding: 10px 12px;
     margin-bottom: 8px;
-    color: #d4d4d4;
-    font-size: 14px;
-    font-family: 'Inter', sans-serif;
+    color: var(--text-narration);
+    font-family: var(--font-ui);
+    font-size: var(--size-ui-body);
     position: relative;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.note-entry:hover {
+    border-color: var(--accent-primary);
 }
 
 .note-entry .note-time {
-    font-size: 11px;
-    color: #555;
+    font-size: var(--size-ui-label);
+    color: var(--text-muted);
     margin-bottom: 4px;
 }
 
@@ -442,46 +679,53 @@ body {
     position: absolute;
     top: 8px;
     right: 10px;
-    color: #555;
+    color: var(--text-muted);
     cursor: pointer;
-    font-size: 14px;
+    font-size: var(--size-ui-body);
+    transition: color 0.2s;
 }
 
 .note-entry .note-delete:hover {
-    color: #bf616a;
+    color: #c55;
 }
 
 #note-input-area {
     margin-top: 12px;
     display: flex;
+    gap: 8px;
 }
 
 #note-input {
     flex: 1;
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
-    color: #d4d4d4;
+    background: var(--surface-overlay);
+    border: 1px solid var(--border-default);
+    color: var(--text-narration);
     padding: 8px 12px;
-    font-size: 14px;
-    font-family: 'Inter', sans-serif;
+    font-size: var(--size-ui-body);
+    font-family: var(--font-ui);
     border-radius: 4px;
     outline: none;
 }
 
 #note-input:focus {
-    border-color: #b48ead;
+    border-color: var(--accent-primary);
 }
 
 #note-add-btn {
-    margin-left: 8px;
     padding: 8px 14px;
-    background: #b48ead;
-    color: #1a1a2e;
+    background: var(--accent-primary);
+    color: #fff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
-    font-weight: 600;
+    font-family: var(--font-ui);
+    font-size: var(--size-ui-body);
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+#note-add-btn:hover {
+    background: var(--accent-hover);
 }
 
 /* ================================================================
@@ -491,7 +735,7 @@ body {
 #launcher {
     position: fixed;
     inset: 0;
-    background: #0d0d1aee;
+    background: rgba(8, 8, 16, 0.93);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -503,8 +747,8 @@ body {
 }
 
 .launcher-panel {
-    background: #16162b;
-    border: 1px solid #2a2a4a;
+    background: var(--surface-raised);
+    border: 1px solid var(--border-default);
     border-radius: 8px;
     padding: 32px;
     width: 480px;
@@ -513,10 +757,10 @@ body {
 }
 
 .launcher-panel h2 {
-    color: #b48ead;
+    color: var(--accent-primary);
     font-size: 20px;
     font-weight: 600;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-ui);
     text-transform: uppercase;
     letter-spacing: 2px;
     margin-bottom: 24px;
@@ -524,9 +768,9 @@ body {
 }
 
 .launcher-panel h3 {
-    color: #888;
-    font-size: 12px;
-    font-family: 'Inter', sans-serif;
+    color: var(--text-muted);
+    font-size: var(--size-ui-small);
+    font-family: var(--font-ui);
     text-transform: uppercase;
     letter-spacing: 1px;
     margin-bottom: 12px;
@@ -540,73 +784,81 @@ body {
 .campaign-item {
     display: flex;
     align-items: center;
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
+    background: var(--surface-overlay);
+    border: 1px solid var(--border-default);
     border-radius: 4px;
     padding: 12px 16px;
     margin-bottom: 8px;
     cursor: pointer;
-    transition: border-color 0.2s ease;
+    transition: border-color 0.2s;
 }
 
 .campaign-item:hover {
-    border-color: #b48ead;
+    border-color: var(--accent-primary);
 }
 
 .campaign-item .campaign-title {
-    color: #d4d4d4;
+    color: var(--text-narration);
     font-size: 15px;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-ui);
     font-weight: 500;
 }
 
 .campaign-item .campaign-setting {
-    color: #666;
-    font-size: 12px;
-    font-family: 'Inter', sans-serif;
+    color: var(--text-muted);
+    font-size: var(--size-ui-small);
+    font-family: var(--font-ui);
     margin-top: 4px;
+}
+
+.campaign-empty {
+    color: var(--text-faint);
+    font-style: italic;
+    font-size: var(--size-ui-body);
+    font-family: var(--font-ui);
+    padding: 8px 0;
 }
 
 .launcher-divider {
     border: none;
-    border-top: 1px solid #2a2a4a;
+    border-top: 1px solid var(--border-default);
     margin: 24px 0;
 }
 
 .launcher-input {
     width: 100%;
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
-    color: #d4d4d4;
+    background: var(--surface-overlay);
+    border: 1px solid var(--border-default);
+    color: var(--text-narration);
     padding: 10px 14px;
-    font-size: 14px;
-    font-family: 'Inter', sans-serif;
+    font-size: var(--size-ui-body);
+    font-family: var(--font-ui);
     border-radius: 4px;
     outline: none;
     margin-bottom: 10px;
-    transition: border-color 0.2s ease;
+    transition: border-color 0.2s;
 }
 
 .launcher-input:focus {
-    border-color: #b48ead;
+    border-color: var(--accent-primary);
 }
 
 .launcher-input::placeholder {
-    color: #555;
+    color: var(--text-faint);
 }
 
 .launcher-textarea {
     width: 100%;
-    background: #1a1a2e;
-    border: 1px solid #2a2a4a;
-    color: #d4d4d4;
+    background: var(--surface-overlay);
+    border: 1px solid var(--border-default);
+    color: var(--text-narration);
     padding: 10px 14px;
-    font-size: 14px;
-    font-family: 'Inter', sans-serif;
+    font-size: var(--size-ui-body);
+    font-family: var(--font-ui);
     border-radius: 4px;
     outline: none;
     margin-bottom: 10px;
-    transition: border-color 0.2s ease;
+    transition: border-color 0.2s;
     resize: vertical;
     min-height: 80px;
     max-height: 240px;
@@ -614,11 +866,11 @@ body {
 }
 
 .launcher-textarea:focus {
-    border-color: #b48ead;
+    border-color: var(--accent-primary);
 }
 
 .launcher-textarea::placeholder {
-    color: #555;
+    color: var(--text-faint);
 }
 
 .campaign-actions {
@@ -632,10 +884,10 @@ body {
     background: none;
     border: none;
     cursor: pointer;
-    font-size: 14px;
+    font-size: var(--size-ui-body);
     padding: 4px 6px;
     opacity: 0.4;
-    transition: opacity 0.2s ease;
+    transition: opacity 0.2s;
 }
 
 .campaign-export:hover {
@@ -645,16 +897,16 @@ body {
 .campaign-delete {
     background: none;
     border: none;
-    color: #555;
+    color: var(--text-faint);
     cursor: pointer;
     font-size: 13px;
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-ui);
     padding: 4px 8px;
-    transition: color 0.2s ease;
+    transition: color 0.2s;
 }
 
 .campaign-delete:hover {
-    color: #bf616a;
+    color: #c55;
 }
 
 .campaign-item-info {
@@ -664,64 +916,31 @@ body {
 .launcher-btn {
     width: 100%;
     padding: 12px;
-    background: #b48ead;
-    color: #1a1a2e;
+    background: var(--accent-primary);
+    color: #fff;
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 14px;
-    font-family: 'Inter', sans-serif;
+    font-size: var(--size-ui-body);
+    font-family: var(--font-ui);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
-    transition: background 0.2s ease;
+    transition: background 0.2s;
 }
 
 .launcher-btn:hover {
-    background: #c9a0c1;
-}
-
-/* ================================================================
-   Atmospheric Panel (idle — future use)
-   ================================================================ */
-
-#atmosphere-panel {
-    padding: 16px;
-    background: #12122a;
-    border-bottom: 1px solid #2a2a4a;
-    display: none; /* Hidden until backend supports it */
+    background: var(--accent-hover);
 }
 
 /* ================================================================
    Text Size Classes
+   Override the custom property at the chat window level.
    ================================================================ */
 
-.text-small .message.dm,
-.text-small .message.player {
-    font-size: 15px;
-}
-
-.text-small .dialogue {
-    font-size: 12px;
-}
-
-.text-medium .message.dm,
-.text-medium .message.player {
-    font-size: 17px;
-}
-
-.text-medium .dialogue {
-    font-size: 14px;
-}
-
-.text-large .message.dm,
-.text-large .message.player {
-    font-size: 19px;
-}
-
-.text-large .dialogue {
-    font-size: 15px;
-}
+.text-small { --size-narrative: 15px; }
+.text-medium { --size-narrative: 17px; }
+.text-large { --size-narrative: 19px; }
 
 /* ================================================================
    Scrollbar
@@ -732,14 +951,14 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-    background: #0d0d1a;
+    background: var(--surface-deep);
 }
 
 ::-webkit-scrollbar-thumb {
-    background: #2a2a4a;
+    background: var(--border-default);
     border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-    background: #3a3a5a;
+    background: var(--text-faint);
 }
