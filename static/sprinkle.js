@@ -622,6 +622,83 @@ popoutMapBtn.addEventListener("click", () => {
 });
 
 // ============================================================
+// Map Zoom & Pan
+// ============================================================
+
+const mapContainer = document.getElementById("map-container");
+const mapImage = document.getElementById("map-image");
+let mapZoom = 100;
+const MAP_ZOOM_MIN = 50;
+const MAP_ZOOM_MAX = 250;
+const MAP_ZOOM_STEP = 25;
+
+if (mapContainer && mapImage) {
+    // Scroll-wheel zoom, centred on cursor position.
+    mapContainer.addEventListener("wheel", (e) => {
+        e.preventDefault();
+
+        const oldZoom = mapZoom;
+        if (e.deltaY < 0) {
+            mapZoom = Math.min(MAP_ZOOM_MAX, mapZoom + MAP_ZOOM_STEP);
+        } else {
+            mapZoom = Math.max(MAP_ZOOM_MIN, mapZoom - MAP_ZOOM_STEP);
+        }
+
+        if (mapZoom === oldZoom) return;
+
+        // Cursor position relative to the container viewport.
+        const rect = mapContainer.getBoundingClientRect();
+        const cursorX = e.clientX - rect.left;
+        const cursorY = e.clientY - rect.top;
+
+        // Cursor position as a fraction of the current image size.
+        const scrollX = mapContainer.scrollLeft + cursorX;
+        const scrollY = mapContainer.scrollTop + cursorY;
+        const ratioX = scrollX / (mapImage.offsetWidth || 1);
+        const ratioY = scrollY / (mapImage.offsetHeight || 1);
+
+        // Apply new zoom.
+        mapImage.style.width = mapZoom + "%";
+
+        // Adjust scroll so the point under the cursor stays put.
+        requestAnimationFrame(() => {
+            mapContainer.scrollLeft = ratioX * mapImage.offsetWidth - cursorX;
+            mapContainer.scrollTop = ratioY * mapImage.offsetHeight - cursorY;
+        });
+    }, { passive: false });
+
+    // Click-and-drag panning.
+    let isPanning = false;
+    let panStartX = 0;
+    let panStartY = 0;
+    let scrollStartX = 0;
+    let scrollStartY = 0;
+
+    mapContainer.addEventListener("mousedown", (e) => {
+        if (e.button !== 0) return;
+        isPanning = true;
+        panStartX = e.clientX;
+        panStartY = e.clientY;
+        scrollStartX = mapContainer.scrollLeft;
+        scrollStartY = mapContainer.scrollTop;
+        mapContainer.style.cursor = "grabbing";
+        e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", (e) => {
+        if (!isPanning) return;
+        mapContainer.scrollLeft = scrollStartX - (e.clientX - panStartX);
+        mapContainer.scrollTop = scrollStartY - (e.clientY - panStartY);
+    });
+
+    document.addEventListener("mouseup", () => {
+        if (!isPanning) return;
+        isPanning = false;
+        mapContainer.style.cursor = "grab";
+    });
+}
+
+// ============================================================
 // Notes (local player notes)
 // ============================================================
 
