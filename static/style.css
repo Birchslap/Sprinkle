@@ -954,10 +954,13 @@ body.high-contrast .speaker-label.label-player {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
 }
 
 #main-view > #page-map #map-container {
-    min-height: 400px;
+    min-height: 0;
+    flex: 1;
 }
 
 /* ================================================================
