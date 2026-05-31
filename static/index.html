@@ -40,9 +40,10 @@ Name, race, class, backstory — as much or as little as you like."></textarea>
         <div id="atmos-brand">SPRINKLE</div>
     </div>
 
-    <!-- LEFT PANEL: Chat -->
-    <div id="left-panel">
-        <!-- Top bar -->
+    <!-- GAME CONTAINER -->
+    <div id="game-container">
+
+        <!-- Top Bar — Global controls (outside panels so it never moves) -->
         <div id="top-bar">
             <div id="top-bar-controls">
                 <!-- Font size -->
@@ -68,66 +69,74 @@ Name, race, class, backstory — as much or as little as you like."></textarea>
             </div>
         </div>
 
-        <!-- Chat tabs -->
-        <div id="chat-tabs">
-            <div class="chat-tab active" data-tab="ic">In Character</div>
-            <div class="chat-tab" data-tab="ooc">Out of Character</div>
-        </div>
+        <!-- PANELS -->
+        <div id="panels">
 
-        <!-- Content area -->
-        <div id="content-area">
-            <div id="main-view">
-                <div id="chat-window">
-                    <!-- Messages populated by JS -->
+            <!-- LEFT PANEL: Chat -->
+            <div id="left-panel">
+                <!-- Chat tabs -->
+                <div id="chat-tabs">
+                    <div class="chat-tab active" data-tab="ic">In Character</div>
+                    <div class="chat-tab" data-tab="ooc">Out of Character</div>
                 </div>
-            </div>
-        </div>
 
-        <!-- Input -->
-        <div id="input-area">
-            <input type="text" id="player-input" placeholder="What do you do?" autocomplete="off" disabled>
-            <button id="send-btn" disabled>Send</button>
-        </div>
-    </div>
+                <!-- Content area -->
+                <div id="content-area">
+                    <div id="main-view">
+                        <div id="chat-window">
+                            <!-- Messages populated by JS -->
+                        </div>
+                    </div>
+                </div>
 
-    <!-- RIGHT PANEL: Game State -->
-    <div id="right-panel">
-        <div id="state-tabs">
-            <div class="state-tab active" data-page="map">Map</div>
-            <div class="state-tab" data-page="character">Character</div>
-            <div class="state-tab" data-page="party">Party</div>
-            <div class="state-tab" data-page="inventory">Inventory</div>
-            <div class="state-tab" data-page="notes">Notes</div>
-        </div>
-        <div id="state-content">
-            <div class="state-page active" id="page-map">
-                <div class="map-controls">
-                    <button class="map-btn" id="swap-views" title="Swap map and chat">⇄ Expand</button>
-                    <button class="map-btn" id="popout-map" title="Open in new window">⧉ Popout</button>
-                </div>
-                <div id="map-container">
-                    <canvas id="map-canvas"></canvas>
-                    <span id="map-placeholder">Map will render here</span>
+                <!-- Input -->
+                <div id="input-area">
+                    <input type="text" id="player-input" placeholder="What do you do?" autocomplete="off" disabled>
+                    <button id="send-btn" disabled>Send</button>
                 </div>
             </div>
-            <div class="state-page" id="page-character">
-                <p class="placeholder-text">Character sheet will display here.</p>
-            </div>
-            <div class="state-page" id="page-party">
-                <p class="placeholder-text">Party information will display here.</p>
-            </div>
-            <div class="state-page" id="page-inventory">
-                <p class="placeholder-text">Gold and equipment will display here.</p>
-            </div>
-            <div class="state-page" id="page-notes">
-                <div id="notes-list"></div>
-                <div id="note-input-area">
-                    <input type="text" id="note-input" placeholder="Add a note..." autocomplete="off">
-                    <button id="note-add-btn">+</button>
+
+            <!-- RIGHT PANEL: Game State -->
+            <div id="right-panel">
+                <div id="state-tabs">
+                    <div class="state-tab active" data-page="map">Map</div>
+                    <div class="state-tab" data-page="character">Character</div>
+                    <div class="state-tab" data-page="party">Party</div>
+                    <div class="state-tab" data-page="inventory">Inventory</div>
+                    <div class="state-tab" data-page="notes">Notes</div>
+                </div>
+                <div id="state-content">
+                    <div class="state-page active" id="page-map">
+                        <div class="map-controls">
+                            <button class="map-btn" id="swap-views" title="Swap map and chat">⇄ Expand</button>
+                            <button class="map-btn" id="popout-map" title="Open in new window">⧉ Popout</button>
+                        </div>
+                        <div id="map-container">
+                            <canvas id="map-canvas"></canvas>
+                            <span id="map-placeholder">Map will render here</span>
+                        </div>
+                    </div>
+                    <div class="state-page" id="page-character">
+                        <p class="placeholder-text">Character sheet will display here.</p>
+                    </div>
+                    <div class="state-page" id="page-party">
+                        <p class="placeholder-text">Party information will display here.</p>
+                    </div>
+                    <div class="state-page" id="page-inventory">
+                        <p class="placeholder-text">Gold and equipment will display here.</p>
+                    </div>
+                    <div class="state-page" id="page-notes">
+                        <div id="notes-list"></div>
+                        <div id="note-input-area">
+                            <input type="text" id="note-input" placeholder="Add a note..." autocomplete="off">
+                            <button id="note-add-btn">+</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </div>
+
+        </div><!-- /panels -->
+    </div><!-- /game-container -->
 
     <script src="/static/sprinkle.js"></script>
 </body>
