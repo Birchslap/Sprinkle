@@ -616,22 +616,21 @@ body.high-contrast .speaker-label.label-player {
     flex: 1;
     position: relative;
     background: var(--surface-deep);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
+    overflow: auto;
     min-height: 300px;
+    cursor: grab;
 }
 
-#map-canvas {
+#map-container:active {
+    cursor: grabbing;
+}
+
+#map-image {
     display: block;
-}
-
-#map-placeholder {
-    color: var(--text-faint);
-    font-family: var(--font-ui);
-    font-style: italic;
-    font-size: var(--size-ui-body);
+    max-width: none;
+    height: auto;
+    user-select: none;
+    -webkit-user-drag: none;
 }
 
 .map-controls {
