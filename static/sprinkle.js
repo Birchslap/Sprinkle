@@ -259,8 +259,13 @@ function renderHistoryMessage(role, content) {
         const div = createMessageBlock("dm");
         const container = document.createElement("div");
         container.className = "message-text";
-        container.textContent = content;
-        container.innerHTML = highlightDialogue(container.innerHTML);
+        // Escape HTML, convert newlines to <br>, then highlight dialogue.
+        const escaped = content
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/\n/g, "<br>");
+        container.innerHTML = highlightDialogue(escaped);
         div.appendChild(container);
         div.classList.remove("typing");
     }
