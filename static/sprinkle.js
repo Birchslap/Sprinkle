@@ -402,7 +402,12 @@ function appendPlayerMessage(text) {
     const div = createMessageBlock("player");
     const container = document.createElement("div");
     container.className = "message-text";
-    container.textContent = text;
+    const escaped = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/\n/g, "<br>");
+    container.innerHTML = escaped;
     div.appendChild(container);
     return div;
 }
